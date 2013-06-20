@@ -7,6 +7,12 @@ if not pygame.mixer: print 'Warning, sound disabled'
 main_dir = os.path.split(os.path.abspath(sys.argv[0]))[0]
 data_dir = os.path.join(main_dir, 'data')
 
+def enum(*sequential, **named):
+    enums = dict(zip(sequential, range(len(sequential))), **named)
+    return type('Enum', (), enums)
+
+Inputs = enum('DOWN','DOWNRIGHT','RIGHT','UPRIGHT','UP','UPLEFT','LEFT','DOWNLEFT')
+
 class Character(pygame.sprite.Sprite):
     """ Class holds all info on a Character and interprets it's actions """
     def __init__(self):
@@ -25,6 +31,26 @@ class Character(pygame.sprite.Sprite):
     def interpretInputs(self):
         print self.inputChain
         del self.inputChain[:]
+
+class CombatManager():
+    """ Class for managing collisions, inputs, gamestate, etc. """
+    def __init__(self):
+
+        self.player1 = Character()
+        self.player2 = Character()
+
+    def update(self):
+
+        self.checkCollisions()
+        self.updateCharacters()
+
+    def checkCollision():
+        print "Checking Collisions here"
+
+    def updateCharacters():
+        self.player1.update([], 0)
+        self.player2.update([],0)
+    
 
 def load_image(name, colorkey=None):
     fullname = os.path.join(data_dir, name)
@@ -77,7 +103,7 @@ def main():
     #Prepare Game Objects
     clock = pygame.time.Clock()
     player1 = Character()
-        
+       
     going = True
     while going:
         clock.tick(60)
