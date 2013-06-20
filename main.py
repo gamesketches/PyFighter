@@ -7,6 +7,25 @@ if not pygame.mixer: print 'Warning, sound disabled'
 main_dir = os.path.split(os.path.abspath(sys.argv[0]))[0]
 data_dir = os.path.join(main_dir, 'data')
 
+class Character(pygame.sprite.Sprite):
+    """ Class holds all info on a Character and interprets it's actions """
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.meters = []
+        self.health = 0
+        self.neutralAnimation = []
+        self.inputChain = [] # Keeps track of inputs for interpretting
+        self.hitAnimation = []
+        self.blockImage = None
+
+    def update(self, curInputs, gameState):
+        self.inputChain.append(curInputs)
+        self.interpretInputs()
+
+    def interpretInputs(self):
+        print self.inputChain
+        del self.inputChain[:]
+
 def load_image(name, colorkey=None):
     fullname = os.path.join(data_dir, name)
     try:
@@ -39,7 +58,6 @@ def main():
     #Initialize Everything
     pygame.init()
     screen = pygame.display.set_mode((468, 100))
-    pygame.display.set_caption('Monkey Fever')
     pygame.mouse.set_visible(0)
 
     #Create the background
@@ -58,7 +76,8 @@ def main():
 
     #Prepare Game Objects
     clock = pygame.time.Clock()
-
+    player1 = Character()
+        
     going = True
     while going:
         clock.tick(60)
@@ -66,8 +85,8 @@ def main():
         for event in pygame.event.get():
             if event.type == QUIT:
                 pygame.quit()
-            elif event.type == KEYDOWN and event.key == K_ESCAPE:
-                pygame.quit()
+            elif event.type == KEYDOWN:
+                player1.update(event.key, None)
 
         screen.blit(background, (0,0))
         pygame.display.flip()
