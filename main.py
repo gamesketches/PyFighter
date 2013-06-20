@@ -7,11 +7,11 @@ if not pygame.mixer: print 'Warning, sound disabled'
 main_dir = os.path.split(os.path.abspath(sys.argv[0]))[0]
 data_dir = os.path.join(main_dir, 'data')
 
-def enum(*sequential, **named):
-    enums = dict(zip(sequential, range(len(sequential))), **named)
-    return type('Enum', (), enums)
+#def enum(*sequential, **named):
+#    enums = dict(zip(sequential, range(len(sequential))), **named)
+#    return type('Enum', (), enums)
 
-Inputs = enum('DOWN','DOWNRIGHT','RIGHT','UPRIGHT','UP','UPLEFT','LEFT','DOWNLEFT')
+#Inputs = enum('DOWN','DOWNRIGHT','RIGHT','UPRIGHT','UP','UPLEFT','LEFT','DOWNLEFT', 'TERMINAL')
 
 class Character(pygame.sprite.Sprite):
     """ Class holds all info on a Character and interprets it's actions """
@@ -25,12 +25,20 @@ class Character(pygame.sprite.Sprite):
         self.blockImage = None
 
     def update(self, curInputs, gameState):
-        self.inputChain.append(curInputs)
+        if curInputs == K_DOWN:
+            self.inputChain.append('DOWN')
+        if curInputs == K_RIGHT:
+            self.inputChain.append('RIGHT')
+        if curInputs == K_SPACE:
+            self.inputChain.append('TERMINAL')
         self.interpretInputs()
 
     def interpretInputs(self):
-        print self.inputChain
-        del self.inputChain[:]
+        if self.inputChain == ['DOWN', 'RIGHT']:
+            print "hadoken"
+            self.inputChain.append('TERMINAL')
+        if self.inputChain[-1] == 'TERMINAL':
+            del self.inputChain[:]
 
 class CombatManager():
     """ Class for managing collisions, inputs, gamestate, etc. """
@@ -112,6 +120,8 @@ def main():
             if event.type == QUIT:
                 pygame.quit()
             elif event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    pygame.quit()
                 player1.update(event.key, None)
 
         screen.blit(background, (0,0))
