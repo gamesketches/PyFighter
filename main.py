@@ -19,7 +19,7 @@ class Character(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.meters = []
         self.health = 0
-        self.neutralAnimation = []
+        self.neutralAnimation = load_animation('RyuSFA3.png', [(190, 126, 66, 96)])
         self.inputChain = [] # Keeps track of inputs for interpretting
         self.hitAnimation = []
         self.blockImage = None
@@ -74,6 +74,14 @@ def load_image(name, colorkey=None):
         image.set_colorkey(colorkey, RLEACCEL)
     return image, image.get_rect()
 
+def load_animation(filename, coords, colorkey=None):
+    master_image, master_rect = load_image(filename)
+    theAnimation = []
+    for i in coords:
+        theAnimation.append(master_image.subsurface(i))
+
+    return theAnimation
+
 def load_sound(name):
     class NoneSound:
         def play(self):pass
@@ -125,6 +133,7 @@ def main():
                 player1.update(event.key, None)
 
         screen.blit(background, (0,0))
+        screen.blit(player1.neutralAnimation[0], (0,0))
         pygame.display.flip()
 
 if __name__ == '__main__':
