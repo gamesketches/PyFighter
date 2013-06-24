@@ -19,19 +19,31 @@ class Character(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.meters = []
         self.health = 0
-        self.neutralAnimation = load_animation('RyuSFA3.png', [(190, 126, 66, 96)])
+        self.curAnimation = []
+        self.curAnimationFrame = 0
+        self.curHurtBox = pygame.Rect(0, 0, 66, 96) 
+        self.neutralAnimation = load_animation('RyuSFA3.png', [(190, 126, 66, 96),\
+                                                               (269, 126, 66, 96),\
+                                                               (349, 126, 66, 96),\
+                                                               (426, 126, 66, 96),\
+                                                               (505, 126, 66, 96)])
+        self.curAnimation = self.neutralAnimation
         self.inputChain = [] # Keeps track of inputs for interpretting
         self.hitAnimation = []
         self.blockImage = None
 
     def update(self, curInputs, gameState):
-        if curInputs == K_DOWN:
-            self.inputChain.append('DOWN')
-        if curInputs == K_RIGHT:
-            self.inputChain.append('RIGHT')
-        if curInputs == K_SPACE:
-            self.inputChain.append('TERMINAL')
-        self.interpretInputs()
+        if curInputs is not None:
+            if curInputs == K_DOWN:
+                self.inputChain.append('DOWN')
+            if curInputs == K_RIGHT:
+                self.inputChain.append('RIGHT')
+            if curInputs == K_SPACE:
+                self.inputChain.append('TERMINAL')
+            self.interpretInputs()
+        self.curAnimationFrame += 1
+        if self.curAnimationFrame >= len(self.curAnimation): #Will need some more complicated parsing for state here later
+            self.curAnimationFrame = 0
 
     def interpretInputs(self):
         if self.inputChain == ['DOWN', 'RIGHT']:
@@ -39,6 +51,9 @@ class Character(pygame.sprite.Sprite):
             self.inputChain.append('TERMINAL')
         if self.inputChain[-1] == 'TERMINAL':
             del self.inputChain[:]
+
+    def currentFrame(self):
+        return self.curAnimation[self.curAnimationFrame]
 
 class CombatManager():
     """ Class for managing collisions, inputs, gamestate, etc. """
@@ -122,18 +137,19 @@ def main():
        
     going = True
     while going:
-        clock.tick(60)
-
+        clock.tick(15)
+        key = None
         for event in pygame.event.get():
             if event.type == QUIT:
                 pygame.quit()
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     pygame.quit()
-                player1.update(event.key, None)
-
+                else:
+                    key = event.key
+        player1.update(key, None)        
         screen.blit(background, (0,0))
-        screen.blit(player1.neutralAnimation[0], (0,0))
+        screen.blit(player1.currentFrame(), player1.curHurtBox.topleft)
         pygame.display.flip()
 
 if __name__ == '__main__':
