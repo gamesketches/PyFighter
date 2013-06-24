@@ -19,38 +19,70 @@ class Character(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.meters = []
         self.health = 0
+        self.velocity = [0,0]
         self.curAnimation = []
         self.curAnimationFrame = 0
+        self.keysDown = []
         self.curHurtBox = pygame.Rect(0, 0, 66, 96) 
         self.neutralAnimation = load_animation('RyuSFA3.png', [(190, 126, 66, 96),\
                                                                (269, 126, 66, 96),\
                                                                (349, 126, 66, 96),\
                                                                (426, 126, 66, 96),\
                                                                (505, 126, 66, 96)])
+        self.walkforwardAnimation = load_animation('RyuSFA3.png', [(63, 237, 71, 94),\
+                                                                   (144, 237, 71, 94),\
+                                                                   (227, 237, 60, 94),\
+                                                                   (306, 237, 55, 94), \
+                                                                   (454, 237, 57, 94),\
+                                                                   (454, 237, 64, 94)])
         self.curAnimation = self.neutralAnimation
         self.inputChain = [] # Keeps track of inputs for interpretting
         self.hitAnimation = []
         self.blockImage = None
 
-    def update(self, curInputs, gameState):
-        if curInputs is not None:
-            if curInputs == K_DOWN:
-                self.inputChain.append('DOWN')
-            if curInputs == K_RIGHT:
-                self.inputChain.append('RIGHT')
-            if curInputs == K_SPACE:
-                self.inputChain.append('TERMINAL')
-            self.interpretInputs()
+    def update(self, gameState):
+        #if curInputs is not None:
+        #    if curInputs == K_DOWN:
+        #        self.inputChain.append('DOWN')
+        #    if curInputs == K_RIGHT:
+        #        self.inputChain.append('RIGHT')
+        #    if curInputs == K_SPACE:
+        #        self.inputChain.append('TERMINAL')
+        #    self.interpretInputs()
+        #    self.curHurtBox.x += self.velocity[0]
+        self.interpretInputs()
+        self.curHurtBox.x += self.velocity[0]
         self.curAnimationFrame += 1
         if self.curAnimationFrame >= len(self.curAnimation): #Will need some more complicated parsing for state here later
             self.curAnimationFrame = 0
 
+    def keyPressed(self, state, button):
+        if state is True:
+            if button == K_RIGHT:
+                self.keysDown.append('RIGHT')
+                self.curAnimation = self.walkforwardAnimation
+                self.curAnimationFrame = 0
+            if button == K_LEFT:
+                self.keysDown.append('LEFT')
+        else:
+            if button == K_RIGHT:
+                del self.keysDown[self.keysDown.index('RIGHT')]
+                self.curAnimation = self.neutralAnimation
+            if button == K_LEFT:
+                del self.keysDown[self.keysDown.index('LEFT')]
+
     def interpretInputs(self):
-        if self.inputChain == ['DOWN', 'RIGHT']:
-            print "hadoken"
-            self.inputChain.append('TERMINAL')
-        if self.inputChain[-1] == 'TERMINAL':
-            del self.inputChain[:]
+        #if self.inputChain == ['DOWN', 'RIGHT']:
+        #    print "hadoken"
+        #    self.inputChain.append('TERMINAL')
+        #if self.inputChain[-1] == 'TERMINAL':
+        #    del self.inputChain[:]
+        if 'RIGHT' in self.keysDown:
+            self.velocity[0] = 1
+        elif 'LEFT' in self.keysDown:
+            self.velocity[0] = -1
+        else:
+            self.velocity[0] = 0
 
     def currentFrame(self):
         return self.curAnimation[self.curAnimationFrame]
@@ -147,7 +179,10 @@ def main():
                     pygame.quit()
                 else:
                     key = event.key
-        player1.update(key, None)        
+                    player1.keyPressed(True, event.key)
+            elif event.type == KEYUP:
+                player1.keyPressed(False, event.key)
+        player1.update( None)        
         screen.blit(background, (0,0))
         screen.blit(player1.currentFrame(), player1.curHurtBox.topleft)
         pygame.display.flip()
