@@ -13,6 +13,13 @@ data_dir = os.path.join(main_dir, 'data')
 
 #Inputs = enum('DOWN','DOWNRIGHT','RIGHT','UPRIGHT','UP','UPLEFT','LEFT','DOWNLEFT', 'TERMINAL')
 
+class Move():
+    def __init__(self, moveName, inputs, animation, hitboxes):
+        self.name = moveName
+        self.inputs = inputs
+        self.animation = animation
+        self.hitboxes = hitboxes
+
 class Character(pygame.sprite.Sprite):
     """ Class holds all info on a Character and interprets it's actions """
     def __init__(self):
@@ -42,15 +49,6 @@ class Character(pygame.sprite.Sprite):
         self.blockImage = None
 
     def update(self, gameState):
-        #if curInputs is not None:
-        #    if curInputs == K_DOWN:
-        #        self.inputChain.append('DOWN')
-        #    if curInputs == K_RIGHT:
-        #        self.inputChain.append('RIGHT')
-        #    if curInputs == K_SPACE:
-        #        self.inputChain.append('TERMINAL')
-        #    self.interpretInputs()
-        #    self.curHurtBox.x += self.velocity[0]
         self.interpretInputs()
         self.curHurtBox.x += self.velocity[0]
         self.curAnimationFrame += 1
