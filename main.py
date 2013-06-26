@@ -35,6 +35,7 @@ class Character(pygame.sprite.Sprite):
                                                                    (306, 237, 55, 94), \
                                                                    (454, 237, 57, 94),\
                                                                    (454, 237, 64, 94)])
+        self.crouchAnimation = load_animation('RyuSFA3.png', [(88,574, 63, 94)])
         self.curAnimation = self.neutralAnimation
         self.inputChain = [] # Keeps track of inputs for interpretting
         self.hitAnimation = []
@@ -62,22 +63,34 @@ class Character(pygame.sprite.Sprite):
                 self.keysDown.append('RIGHT')
                 self.curAnimation = self.walkforwardAnimation
                 self.curAnimationFrame = 0
+                self.inputChain.append('RIGHT')
             if button == K_LEFT:
                 self.keysDown.append('LEFT')
+            if button == K_DOWN:
+                self.keysDown.append('DOWN')
+                self.curAnimation = self.crouchAnimation
+                self.curAnimationFrame = 0
+                self.inputChain.append('DOWN')
         else:
             if button == K_RIGHT:
                 del self.keysDown[self.keysDown.index('RIGHT')]
                 self.curAnimation = self.neutralAnimation
             if button == K_LEFT:
                 del self.keysDown[self.keysDown.index('LEFT')]
+            if button == K_DOWN:
+                del self.keysDown[self.keysDown.index('DOWN')]
+                self.curAnimation = self.neutralAnimation
+                
 
     def interpretInputs(self):
-        #if self.inputChain == ['DOWN', 'RIGHT']:
-        #    print "hadoken"
+        if self.inputChain == ['DOWN', 'RIGHT']:
+            print "hadoken"
         #    self.inputChain.append('TERMINAL')
         #if self.inputChain[-1] == 'TERMINAL':
-        #    del self.inputChain[:]
-        if 'RIGHT' in self.keysDown:
+            del self.inputChain[:]
+        if 'DOWN' in self.keysDown:
+            self.velocity[0]= 0
+        elif 'RIGHT' in self.keysDown:
             self.velocity[0] = 1
         elif 'LEFT' in self.keysDown:
             self.velocity[0] = -1
