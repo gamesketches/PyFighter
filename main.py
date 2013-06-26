@@ -19,6 +19,17 @@ class Move():
         self.inputs = inputs
         self.animation = animation
         self.hitboxes = hitboxes
+        self.animationFrame = 0
+        self.done = False
+    def nextFrame(self):
+        returnVal = self.animation[self.animationFrame]
+        self.animationFrame += 1
+        if self.animationFrame >= len(self.animation):
+            self.done = True
+        return returnVal
+    def initialize(self):
+        self.done = False
+        self.animationFrame = 0
 
 class Character(pygame.sprite.Sprite):
     """ Class holds all info on a Character and interprets it's actions """
@@ -29,6 +40,7 @@ class Character(pygame.sprite.Sprite):
         self.velocity = [0,0]
         self.curAnimation = []
         self.curAnimationFrame = 0
+        self.curMove = None
         self.keysDown = []
         self.curHurtBox = pygame.Rect(0, 0, 66, 96) 
         self.neutralAnimation = load_animation('RyuSFA3.png', [(190, 126, 66, 96),\
@@ -43,6 +55,7 @@ class Character(pygame.sprite.Sprite):
                                                                    (454, 237, 57, 94),\
                                                                    (454, 237, 64, 94)])
         self.crouchAnimation = load_animation('RyuSFA3.png', [(88,574, 63, 94)])
+        self.punch = Move('punch', 'A', load_animation('RyuSFA3.png', [(433, 699, 78, 94), (523, 699, 108, 94)]), self.curHurtBox)
         self.curAnimation = self.neutralAnimation
         self.inputChain = [] # Keeps track of inputs for interpretting
         self.hitAnimation = []
@@ -69,6 +82,10 @@ class Character(pygame.sprite.Sprite):
                 self.curAnimation = self.crouchAnimation
                 self.curAnimationFrame = 0
                 self.inputChain.append('DOWN')
+            if button == K_a:
+                self.punch.initialize()
+                self.curMove = self.punch
+                self.curAnimation = self.punch.animation
         else:
             if button == K_RIGHT:
                 del self.keysDown[self.keysDown.index('RIGHT')]
@@ -96,7 +113,14 @@ class Character(pygame.sprite.Sprite):
             self.velocity[0] = 0
 
     def currentFrame(self):
-        return self.curAnimation[self.curAnimationFrame]
+        if self.curMove is None:
+            return self.curAnimation[self.curAnimationFrame]
+        else:
+            returnVal = self.punch.nextFrame()
+            if self.punch.done:
+                self.curMove = None
+                self.curAnimation = self.neutralAnimation
+            return returnVal
 
 class CombatManager():
     """ Class for managing collisions, inputs, gamestate, etc. """
