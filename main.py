@@ -57,7 +57,9 @@ class Character(pygame.sprite.Sprite):
                                                                    (454, 237, 57, 94),\
                                                                    (454, 237, 64, 94)])
         self.crouchAnimation = load_animation('RyuSFA3.png', [(88,574, 63, 94)])
-        self.punch = Move('punch', 'A', load_animation('RyuSFA3.png', [(433, 699, 78, 94), (523, 699, 108, 94)]), self.curHurtBox)
+        sourceFile = open('datafile.txt')
+        self.punch = Move(sourceFile.readline(), sourceFile.readline(), load_animation('RyuSFA3.png', [(433, 699, 78, 94), (523, 699, 108, 94)]), self.curHurtBox)
+        #self.punch = Move('punch', 'A', load_animation('RyuSFA3.png', [(433, 699, 78, 94), (523, 699, 108, 94)]), self.curHurtBox)
         self.moveList = {'JAB': self.punch}
         self.curAnimation = self.neutralAnimation
         self.inputChain = [] # Keeps track of inputs for interpretting
