@@ -21,12 +21,14 @@ class Move():
         self.hitboxes = hitboxes
         self.animationFrame = 0
         self.done = False
+        
     def nextFrame(self):
         returnVal = self.animation[self.animationFrame]
         self.animationFrame += 1
         if self.animationFrame >= len(self.animation):
             self.done = True
         return returnVal
+    
     def initialize(self):
         self.done = False
         self.animationFrame = 0
@@ -56,6 +58,7 @@ class Character(pygame.sprite.Sprite):
                                                                    (454, 237, 64, 94)])
         self.crouchAnimation = load_animation('RyuSFA3.png', [(88,574, 63, 94)])
         self.punch = Move('punch', 'A', load_animation('RyuSFA3.png', [(433, 699, 78, 94), (523, 699, 108, 94)]), self.curHurtBox)
+        self.moveList = {'JAB': self.punch}
         self.curAnimation = self.neutralAnimation
         self.inputChain = [] # Keeps track of inputs for interpretting
         self.hitAnimation = []
@@ -63,10 +66,11 @@ class Character(pygame.sprite.Sprite):
 
     def update(self, gameState):
         self.interpretInputs()
-        self.curHurtBox.x += self.velocity[0]
-        self.curAnimationFrame += 1
-        if self.curAnimationFrame >= len(self.curAnimation): #Will need some more complicated parsing for state here later
-            self.curAnimationFrame = 0
+        if self.curMove is None:
+            self.curHurtBox.x += self.velocity[0]
+            self.curAnimationFrame += 1
+            if self.curAnimationFrame >= len(self.curAnimation): #Will need some more complicated parsing for state here later
+                self.curAnimationFrame = 0
 
     def keyPressed(self, state, button):
         if state is True:
@@ -83,9 +87,10 @@ class Character(pygame.sprite.Sprite):
                 self.curAnimationFrame = 0
                 self.inputChain.append('DOWN')
             if button == K_a:
-                self.punch.initialize()
-                self.curMove = self.punch
-                self.curAnimation = self.punch.animation
+                #self.punch.initialize()
+                #self.curMove = self.punch
+                #self.curAnimation = self.punch.animation
+                self.inputChain.append('JAB')
         else:
             if button == K_RIGHT:
                 del self.keysDown[self.keysDown.index('RIGHT')]
@@ -98,10 +103,14 @@ class Character(pygame.sprite.Sprite):
                 
 
     def interpretInputs(self):
-        if self.inputChain == ['DOWN', 'RIGHT']:
-            print "hadoken"
+        #if self.inputChain == ['DOWN', 'RIGHT']:
+        #    print "hadoken"
         #    self.inputChain.append('TERMINAL')
         #if self.inputChain[-1] == 'TERMINAL':
+        #    del self.inputChain[:]
+        if len(self.inputChain) and self.moveList.get(self.inputChain[-1]) is not None:
+            self.curMove = self.moveList.get(self.inputChain[-1])
+            self.curMove.initialize()
             del self.inputChain[:]
         if 'DOWN' in self.keysDown:
             self.velocity[0]= 0
@@ -116,8 +125,8 @@ class Character(pygame.sprite.Sprite):
         if self.curMove is None:
             return self.curAnimation[self.curAnimationFrame]
         else:
-            returnVal = self.punch.nextFrame()
-            if self.punch.done:
+            returnVal = self.curMove.nextFrame()
+            if self.curMove.done:
                 self.curMove = None
                 self.curAnimation = self.neutralAnimation
             return returnVal
