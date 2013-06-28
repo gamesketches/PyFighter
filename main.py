@@ -91,12 +91,25 @@ class Character(pygame.sprite.Sprite):
         self.curAnimationFrame = 0
         self.curMove = None
         self.keysDown = []
-        self.curHurtBox = pygame.Rect(0, 0, 66, 96) 
-        self.neutralAnimation = load_animation('RyuSFA3.png', [(190, 126, 66, 96),\
-                                                               (269, 126, 66, 96),\
-                                                               (349, 126, 66, 96),\
-                                                               (426, 126, 66, 96),\
-                                                               (505, 126, 66, 96)])
+        self.curHurtBox = pygame.Rect(0, 0, 66, 96)
+        sourceFile = open('datafile.txt')
+        tempAnimation = []
+        while True:
+            i = sourceFile.readline()
+            if i == 'neutral\n':
+                break
+            
+        i = sourceFile.readline()
+        while i is not '':
+            tempAnimation.append(convertTextToCode(i))
+            i = sourceFile.readline()
+        print tempAnimation
+        self.neutralAnimation = load_animation('RyuSFA3.png', tempAnimation)
+        #self.neutralAnimation = load_animation('RyuSFA3.png', [(190, 126, 66, 96),\
+        #                                                       (269, 126, 66, 96),\
+        #                                                       (349, 126, 66, 96),\
+        #                                                       (426, 126, 66, 96),\
+        #                                                       (505, 126, 66, 96)])
         self.walkforwardAnimation = load_animation('RyuSFA3.png', [(63, 237, 71, 94),\
                                                                    (144, 237, 71, 94),\
                                                                    (227, 237, 60, 94),\
