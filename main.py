@@ -13,6 +13,53 @@ data_dir = os.path.join(main_dir, 'data')
 
 #Inputs = enum('DOWN','DOWNRIGHT','RIGHT','UPRIGHT','UP','UPLEFT','LEFT','DOWNLEFT', 'TERMINAL')
 
+def load_image(name, colorkey=None):
+    fullname = os.path.join(data_dir, name)
+    try:
+        image = pygame.image.load(fullname)
+    except pygame.error:
+        print('Cannot load image:', fullname)
+        raise SystemExit(str(geterror()))
+    image = image.convert()
+    if colorkey is not None:
+        if colorkey is -1:
+            colorkey = image.get_at((0,0))
+        image.set_colorkey(colorkey, RLEACCEL)
+    return image, image.get_rect()
+
+def load_animation(filename, coords, colorkey=None):
+    master_image, master_rect = load_image(filename)
+    theAnimation = []
+    for i in coords:
+        theAnimation.append(master_image.subsurface(i))
+
+    return theAnimation
+
+def load_sound(name):
+    class NoneSound:
+        def play(self):pass
+    if not pygame.mixer or not pygame.mixer.get_init():
+        return NoneSound()
+    fullname = os.path.join(data_dir, name)
+    try:
+        sound = pygame.mixer.Sound(fullname)
+    except pygame.error:
+        print ('Cannot load sound: %s' % fullname)
+        raise SystemExit(str(geterror()))
+    return sound
+
+def convertTextToCode(line):
+    nums = []
+    tempNum = ''
+    for i in range(len(line)):
+        if line[i] == ',' or line[i] == '\n':
+            nums.append(int(tempNum))
+            tempNum = ''
+        else:
+            tempNum += line[i]
+
+    return (nums[0], nums[1], nums[2], nums[3])
+
 class Move():
     def __init__(self, moveName, inputs, animation, hitboxes):
         self.name = moveName
@@ -56,7 +103,7 @@ class Character(pygame.sprite.Sprite):
                                                                    (306, 237, 55, 94), \
                                                                    (454, 237, 57, 94),\
                                                                    (454, 237, 64, 94)])
-        self.crouchAnimation = load_animation('RyuSFA3.png', [(88,574, 63, 94)])
+        self.crouchAnimation = load_animation('RyuSFA3.png', [convertTextToCode('88,574,63,94\n')])
         sourceFile = open('datafile.txt')
         self.punch = Move(sourceFile.readline(), sourceFile.readline(), load_animation('RyuSFA3.png', [(433, 699, 78, 94), (523, 699, 108, 94)]), self.curHurtBox)
         #self.punch = Move('punch', 'A', load_animation('RyuSFA3.png', [(433, 699, 78, 94), (523, 699, 108, 94)]), self.curHurtBox)
@@ -151,42 +198,6 @@ class CombatManager():
     def updateCharacters():
         self.player1.update([], 0)
         self.player2.update([],0)
-    
-
-def load_image(name, colorkey=None):
-    fullname = os.path.join(data_dir, name)
-    try:
-        image = pygame.image.load(fullname)
-    except pygame.error:
-        print('Cannot load image:', fullname)
-        raise SystemExit(str(geterror()))
-    image = image.convert()
-    if colorkey is not None:
-        if colorkey is -1:
-            colorkey = image.get_at((0,0))
-        image.set_colorkey(colorkey, RLEACCEL)
-    return image, image.get_rect()
-
-def load_animation(filename, coords, colorkey=None):
-    master_image, master_rect = load_image(filename)
-    theAnimation = []
-    for i in coords:
-        theAnimation.append(master_image.subsurface(i))
-
-    return theAnimation
-
-def load_sound(name):
-    class NoneSound:
-        def play(self):pass
-    if not pygame.mixer or not pygame.mixer.get_init():
-        return NoneSound()
-    fullname = os.path.join(data_dir, name)
-    try:
-        sound = pygame.mixer.Sound(fullname)
-    except pygame.error:
-        print ('Cannot load sound: %s' % fullname)
-        raise SystemExit(str(geterror()))
-    return sound
 
 def main():
     
