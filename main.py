@@ -100,7 +100,6 @@ class Character(pygame.sprite.Sprite):
             if i == 'neutral\n':
                 i = sourceFile.readline()
                 while i != '&\n':
-                    print i
                     tempAnimation.append(convertTextToCode(i))
                     i = sourceFile.readline()
                 self.neutralAnimation = load_animation('RyuSFA3.png', tempAnimation)
@@ -111,12 +110,19 @@ class Character(pygame.sprite.Sprite):
                     tempAnimation.append(convertTextToCode(i))
                     i = sourceFile.readline()
                 self.walkforwardAnimation = load_animation('RyuSFA3.png', tempAnimation)
+            if i == 'normalMove\n':
+                moveName = sourceFile.readline()
+                moveInput = sourceFile.readline()
+                i = sourceFile.readline()
+                while i != '&\n':
+                    tempAnimation.append(convertTextToCode(i))
+                    i = sourceFile.readline()
+                self.punch = Move(moveName, moveInput, load_animation('RyuSFA3.png', tempAnimation), self.curHurtBox)
+                print self.punch
             if i == '@':
                 break
         self.crouchAnimation = load_animation('RyuSFA3.png', [convertTextToCode('88,574,63,94\n')])
         sourceFile = open('datafile.txt')
-        self.punch = Move(sourceFile.readline(), sourceFile.readline(), load_animation('RyuSFA3.png', [(433, 699, 78, 94), (523, 699, 108, 94)]), self.curHurtBox)
-        #self.punch = Move('punch', 'A', load_animation('RyuSFA3.png', [(433, 699, 78, 94), (523, 699, 108, 94)]), self.curHurtBox)
         self.moveList = {'JAB': self.punch}
         self.curAnimation = self.neutralAnimation
         self.inputChain = [] # Keeps track of inputs for interpretting
