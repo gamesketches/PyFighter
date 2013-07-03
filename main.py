@@ -96,26 +96,23 @@ class Character(pygame.sprite.Sprite):
         tempAnimation = []
         while True:
             i = sourceFile.readline()
+            tempAnimation = []
             if i == 'neutral\n':
+                i = sourceFile.readline()
+                while i != '&\n':
+                    print i
+                    tempAnimation.append(convertTextToCode(i))
+                    i = sourceFile.readline()
+                self.neutralAnimation = load_animation('RyuSFA3.png', tempAnimation)
+
+            if i == 'walkingForward\n':
+                i = sourceFile.readline()
+                while i != '&\n':
+                    tempAnimation.append(convertTextToCode(i))
+                    i = sourceFile.readline()
+                self.walkforwardAnimation = load_animation('RyuSFA3.png', tempAnimation)
+            if i == '@':
                 break
-            
-        i = sourceFile.readline()
-        while i is not '':
-            tempAnimation.append(convertTextToCode(i))
-            i = sourceFile.readline()
-        print tempAnimation
-        self.neutralAnimation = load_animation('RyuSFA3.png', tempAnimation)
-        #self.neutralAnimation = load_animation('RyuSFA3.png', [(190, 126, 66, 96),\
-        #                                                       (269, 126, 66, 96),\
-        #                                                       (349, 126, 66, 96),\
-        #                                                       (426, 126, 66, 96),\
-        #                                                       (505, 126, 66, 96)])
-        self.walkforwardAnimation = load_animation('RyuSFA3.png', [(63, 237, 71, 94),\
-                                                                   (144, 237, 71, 94),\
-                                                                   (227, 237, 60, 94),\
-                                                                   (306, 237, 55, 94), \
-                                                                   (454, 237, 57, 94),\
-                                                                   (454, 237, 64, 94)])
         self.crouchAnimation = load_animation('RyuSFA3.png', [convertTextToCode('88,574,63,94\n')])
         sourceFile = open('datafile.txt')
         self.punch = Move(sourceFile.readline(), sourceFile.readline(), load_animation('RyuSFA3.png', [(433, 699, 78, 94), (523, 699, 108, 94)]), self.curHurtBox)
