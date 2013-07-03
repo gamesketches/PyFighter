@@ -93,7 +93,7 @@ class Character(pygame.sprite.Sprite):
         self.keysDown = []
         self.curHurtBox = pygame.Rect(0, 0, 66, 96)
         sourceFile = open('datafile.txt')
-        tempAnimation = []
+        #Read all the data from the file
         while True:
             i = sourceFile.readline()
             tempAnimation = []
@@ -118,11 +118,10 @@ class Character(pygame.sprite.Sprite):
                     tempAnimation.append(convertTextToCode(i))
                     i = sourceFile.readline()
                 self.punch = Move(moveName, moveInput, load_animation('RyuSFA3.png', tempAnimation), self.curHurtBox)
-                print self.punch
+            if i == 'crouch\n':
+                self.crouchAnimation = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
             if i == '@':
                 break
-        self.crouchAnimation = load_animation('RyuSFA3.png', [convertTextToCode('88,574,63,94\n')])
-        sourceFile = open('datafile.txt')
         self.moveList = {'JAB': self.punch}
         self.curAnimation = self.neutralAnimation
         self.inputChain = [] # Keeps track of inputs for interpretting
@@ -199,21 +198,24 @@ class Character(pygame.sprite.Sprite):
 class CombatManager():
     """ Class for managing collisions, inputs, gamestate, etc. """
     def __init__(self):
-
         self.player1 = Character()
-        self.player2 = Character()
 
     def update(self):
 
         self.checkCollisions()
         self.updateCharacters()
 
-    def checkCollision():
+    def checkCollisions(self):
         print "Checking Collisions here"
 
-    def updateCharacters():
-        self.player1.update([], 0)
-        self.player2.update([],0)
+    def updateCharacters(self):
+        self.player1.update(None)
+
+    def drawPlayers(self, screen):
+        screen.blit(self.player1.currentFrame(), self.player1.curHurtBox.topleft)
+
+    def keyPressed(self, down, key):
+        self.player1.keyPressed(down, key)
 
 def main():
     
@@ -238,11 +240,11 @@ def main():
 
     #Prepare Game Objects
     clock = pygame.time.Clock()
-    player1 = Character()
-       
+    #player1 = Character()
+    combatManager = CombatManager()   
     going = True
     while going:
-        clock.tick(15)
+        clock.tick(20)
         key = None
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -252,12 +254,16 @@ def main():
                     pygame.quit()
                 else:
                     key = event.key
-                    player1.keyPressed(True, event.key)
+                    #player1.keyPressed(True, event.key)
+                    combatManager.keyPressed(True, event.key)
             elif event.type == KEYUP:
-                player1.keyPressed(False, event.key)
-        player1.update( None)        
+                #player1.keyPressed(False, event.key)
+                combatManager.keyPressed(True, event.key)
+        #player1.update(None)
+        combatManager.update()
         screen.blit(background, (0,0))
-        screen.blit(player1.currentFrame(), player1.curHurtBox.topleft)
+        combatManager.drawPlayers(screen)
+        #screen.blit(player1.currentFrame(), player1.curHurtBox.topleft)
         pygame.display.flip()
 
 if __name__ == '__main__':
