@@ -88,6 +88,7 @@ class Character(pygame.sprite.Sprite):
         self.health = 0
         self.velocity = [0,0]
         self.curAnimation = []
+        self.state = 'neutral'
         self.curAnimationFrame = 0
         self.curMove = None
         self.keysDown = []
@@ -120,6 +121,12 @@ class Character(pygame.sprite.Sprite):
                 self.punch = Move(moveName, moveInput, load_animation('RyuSFA3.png', tempAnimation), self.curHurtBox)
             if i == 'crouch\n':
                 self.crouchAnimation = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
+            if i == 'hit\n':
+                i = sourceFile.readline()
+                while i != '&\n':
+                    tempAnimation.append(convertTextToCode(i))
+                    i = sourceFile.readline()
+                self.hitAnimation = load_animation('RyuSFA3.png', tempAnimation)
             if i == '@':
                 break
         self.moveList = {'JAB': self.punch}
@@ -155,6 +162,11 @@ class Character(pygame.sprite.Sprite):
                 #self.curMove = self.punch
                 #self.curAnimation = self.punch.animation
                 self.inputChain.append('JAB')
+            if button == K_s:
+                print 'hey'
+                self.curAnimation = self.hitAnimation
+                self.curAnimationFrame = 0
+                self.state = 'hit'
         else:
             if button == K_RIGHT:
                 del self.keysDown[self.keysDown.index('RIGHT')]
@@ -187,7 +199,16 @@ class Character(pygame.sprite.Sprite):
 
     def currentFrame(self):
         if self.curMove is None:
-            return self.curAnimation[self.curAnimationFrame]
+            if self.state != 'hit':
+                return self.curAnimation[self.curAnimationFrame]
+            else:
+                if self.curAnimationFrame >= len(self.curAnimation):
+                    self.state = 'neutral'
+                    self.curAnimation = self.neutralAnimation
+                    self.curAnimationFrame = 0
+                    return self.curAnimation[self.curAnimationFrame]
+                else:
+                    return self.curAnimation[self.curAnimationFrame]
         else:
             returnVal = self.curMove.nextFrame()
             if self.curMove.done:
@@ -244,7 +265,7 @@ def main():
     combatManager = CombatManager()   
     going = True
     while going:
-        clock.tick(20)
+        clock.tick(15)
         key = None
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -258,7 +279,7 @@ def main():
                     combatManager.keyPressed(True, event.key)
             elif event.type == KEYUP:
                 #player1.keyPressed(False, event.key)
-                combatManager.keyPressed(True, event.key)
+                combatManager.keyPressed(False, event.key)
         #player1.update(None)
         combatManager.update()
         screen.blit(background, (0,0))
