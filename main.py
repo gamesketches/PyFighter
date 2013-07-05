@@ -87,6 +87,7 @@ class Character(pygame.sprite.Sprite):
         self.meters = []
         self.health = 0
         self.velocity = [0,0]
+        self.hitStun = 0
         self.curAnimation = []
         self.state = 'neutral'
         self.curAnimationFrame = 0
@@ -132,15 +133,20 @@ class Character(pygame.sprite.Sprite):
         self.moveList = {'JAB': self.punch}
         self.curAnimation = self.neutralAnimation
         self.inputChain = [] # Keeps track of inputs for interpretting
-        self.hitAnimation = []
         self.blockImage = None
 
     def update(self, gameState):
         self.interpretInputs()
-        if self.curMove is None:
+        if self.curMove is None and self.hitStun == 0:
             self.curHurtBox.x += self.velocity[0]
             self.curAnimationFrame += 1
             if self.curAnimationFrame >= len(self.curAnimation): #Will need some more complicated parsing for state here later
+                self.curAnimationFrame = 0
+        elif self.hitStun:
+            self.hitStun -= 1
+            if self.hitStun <= 0:
+                self.state = 'neutral'
+                self.curAnimation = self.neutralAnimation
                 self.curAnimationFrame = 0
 
     def keyPressed(self, state, button):
@@ -163,9 +169,9 @@ class Character(pygame.sprite.Sprite):
                 #self.curAnimation = self.punch.animation
                 self.inputChain.append('JAB')
             if button == K_s:
-                print 'hey'
                 self.curAnimation = self.hitAnimation
                 self.curAnimationFrame = 0
+                self.hitStun = 10
                 self.state = 'hit'
         else:
             if button == K_RIGHT:
@@ -199,16 +205,7 @@ class Character(pygame.sprite.Sprite):
 
     def currentFrame(self):
         if self.curMove is None:
-            if self.state != 'hit':
                 return self.curAnimation[self.curAnimationFrame]
-            else:
-                if self.curAnimationFrame >= len(self.curAnimation):
-                    self.state = 'neutral'
-                    self.curAnimation = self.neutralAnimation
-                    self.curAnimationFrame = 0
-                    return self.curAnimation[self.curAnimationFrame]
-                else:
-                    return self.curAnimation[self.curAnimationFrame]
         else:
             returnVal = self.curMove.nextFrame()
             if self.curMove.done:
