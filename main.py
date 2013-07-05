@@ -82,7 +82,7 @@ class Move():
 
 class Character(pygame.sprite.Sprite):
     """ Class holds all info on a Character and interprets it's actions """
-    def __init__(self):
+    def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
         self.meters = []
         self.health = 0
@@ -93,7 +93,7 @@ class Character(pygame.sprite.Sprite):
         self.curAnimationFrame = 0
         self.curMove = None
         self.keysDown = []
-        self.curHurtBox = pygame.Rect(0, 0, 66, 96)
+        self.curHurtBox = pygame.Rect(x, y, 66, 96)
         sourceFile = open('datafile.txt')
         #Read all the data from the file
         while True:
@@ -116,10 +116,17 @@ class Character(pygame.sprite.Sprite):
                 moveName = sourceFile.readline()
                 moveInput = sourceFile.readline()
                 i = sourceFile.readline()
+                # read in animation
                 while i != '&\n':
                     tempAnimation.append(convertTextToCode(i))
                     i = sourceFile.readline()
-                self.punch = Move(moveName, moveInput, load_animation('RyuSFA3.png', tempAnimation), self.curHurtBox)
+                #read in hitboxes
+                hitBoxCoords = []
+                i = sourceFile.readline()
+                while i != '&\n':
+                    hitBoxCoords.append(convertTextToCode(i))
+                    i = sourceFile.readline()
+                self.punch = Move(moveName, moveInput, load_animation('RyuSFA3.png', tempAnimation), hitBoxCoords)
             if i == 'crouch\n':
                 self.crouchAnimation = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
             if i == 'hit\n':
@@ -216,7 +223,8 @@ class Character(pygame.sprite.Sprite):
 class CombatManager():
     """ Class for managing collisions, inputs, gamestate, etc. """
     def __init__(self):
-        self.player1 = Character()
+        self.player1 = Character(0,0)
+        self.player2 = Character (100,0)
 
     def update(self):
 
@@ -231,6 +239,7 @@ class CombatManager():
 
     def drawPlayers(self, screen):
         screen.blit(self.player1.currentFrame(), self.player1.curHurtBox.topleft)
+        screen.blit(self.player2.currentFrame(), self.player2.curHurtBox.topleft)
 
     def keyPressed(self, down, key):
         self.player1.keyPressed(down, key)
@@ -272,16 +281,12 @@ def main():
                     pygame.quit()
                 else:
                     key = event.key
-                    #player1.keyPressed(True, event.key)
                     combatManager.keyPressed(True, event.key)
             elif event.type == KEYUP:
-                #player1.keyPressed(False, event.key)
                 combatManager.keyPressed(False, event.key)
-        #player1.update(None)
         combatManager.update()
         screen.blit(background, (0,0))
         combatManager.drawPlayers(screen)
-        #screen.blit(player1.currentFrame(), player1.curHurtBox.topleft)
         pygame.display.flip()
 
 if __name__ == '__main__':
