@@ -97,6 +97,7 @@ class Character(pygame.sprite.Sprite):
         self.curMove = None
         self.keysDown = []
         self.curHurtBox = pygame.Rect(x, y, 66, 96)
+        self.facingLeft = False
         sourceFile = open('datafile.txt')
         #Read all the data from the file
         while True:
@@ -179,10 +180,7 @@ class Character(pygame.sprite.Sprite):
                 #self.curAnimation = self.punch.animation
                 self.inputChain.append('JAB')
             if button == K_s:
-                self.curAnimation = self.hitAnimation
-                self.curAnimationFrame = 0
-                self.hitStun = 10
-                self.state = 'hit'
+                self.getHit(10)
         else:
             if button == K_RIGHT:
                 del self.keysDown[self.keysDown.index('RIGHT')]
@@ -213,9 +211,15 @@ class Character(pygame.sprite.Sprite):
         else:
             self.velocity[0] = 0
 
+    def getHit(self, hitStun):
+        self.curAnimation = self.hitAnimation
+        self.curAnimationFrame = 0
+        self.hitStun = 10
+        self.state = 'hit'
+
     def currentFrame(self):
         if self.curMove is None:
-                return self.curAnimation[self.curAnimationFrame], Rect(-1000,0,0,0)
+                return pygame.transform.flip(self.curAnimation[self.curAnimationFrame], self.facingLeft, False), Rect(-1000,0,0,0)
         else:
             returnVal, curHitBox = self.curMove.nextFrame()
             if self.curMove.done:
@@ -233,28 +237,28 @@ class CombatManager():
         self.player2HitBox = None
 
     def update(self):
-
+        if self.player1.curHurtBox.x >= self.player2.curHurtBox.x:
+            self.player1.facingLeft = True
+            self.player2.facingLeft = False
+        else:
+            self.player1.facingLeft = False
+            self.player2.facingLeft = True
         self.checkCollisions()
         self.updateCharacters()
 
     def checkCollisions(self):
         if self.player2.curHurtBox.colliderect(self.player1HitBox):
-            self.player2.curAnimation = self.player2.hitAnimation
-            self.player2.curAnimationFrame = 0
-            self.player2.hitStun = 10
-            self.player2.state = 'hit'
+            self.player2.getHit(10)
 
     def updateCharacters(self):
         self.player1.update(None)
+        self.player2.update(None)
 
     def drawPlayers(self, screen):
         player1Frame, self.player1HitBox = self.player1.currentFrame()
         player2Frame, self.player2HitBox = self.player2.currentFrame()
-        print self.player1HitBox
         screen.blit(player1Frame, self.player1.curHurtBox.topleft)
         screen.blit(player2Frame, self.player2.curHurtBox.topleft)
-        #screen.blit(self.player1.currentFrame()[0], self.player1.curHurtBox.topleft)
-        #screen.blit(self.player2.currentFrame()[0], self.player2.curHurtBox.topleft)
 
     def keyPressed(self, down, key):
         self.player1.keyPressed(down, key)
