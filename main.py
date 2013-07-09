@@ -65,16 +65,19 @@ class Move():
         self.name = moveName
         self.inputs = inputs
         self.animation = animation
-        self.hitboxes = hitboxes
+        self.hitboxes = []
+        for i in hitboxes:
+            self.hitboxes.append(Rect(i))
         self.animationFrame = 0
         self.done = False
         
     def nextFrame(self):
-        returnVal = self.animation[self.animationFrame]
+        returnedImage = self.animation[self.animationFrame]
+        returnedHitBox = self.hitboxes[self.animationFrame]
         self.animationFrame += 1
         if self.animationFrame >= len(self.animation):
             self.done = True
-        return returnVal
+        return returnedImage, returnedHitBox
     
     def initialize(self):
         self.done = False
@@ -212,19 +215,22 @@ class Character(pygame.sprite.Sprite):
 
     def currentFrame(self):
         if self.curMove is None:
-                return self.curAnimation[self.curAnimationFrame]
+                return self.curAnimation[self.curAnimationFrame], Rect(-1000,0,0,0)
         else:
-            returnVal = self.curMove.nextFrame()
+            returnVal, curHitBox = self.curMove.nextFrame()
             if self.curMove.done:
                 self.curMove = None
                 self.curAnimation = self.neutralAnimation
-            return returnVal
+            curHitBox = curHitBox.move(self.curHurtBox.x, self.curHurtBox.y)
+            return returnVal, curHitBox
 
 class CombatManager():
     """ Class for managing collisions, inputs, gamestate, etc. """
     def __init__(self):
         self.player1 = Character(0,0)
         self.player2 = Character (100,0)
+        self.player1HitBox = Rect(-1000,0,0,0)
+        self.player2HitBox = None
 
     def update(self):
 
@@ -232,14 +238,23 @@ class CombatManager():
         self.updateCharacters()
 
     def checkCollisions(self):
-        print "Checking Collisions here"
+        if self.player2.curHurtBox.colliderect(self.player1HitBox):
+            self.player2.curAnimation = self.player2.hitAnimation
+            self.player2.curAnimationFrame = 0
+            self.player2.hitStun = 10
+            self.player2.state = 'hit'
 
     def updateCharacters(self):
         self.player1.update(None)
 
     def drawPlayers(self, screen):
-        screen.blit(self.player1.currentFrame(), self.player1.curHurtBox.topleft)
-        screen.blit(self.player2.currentFrame(), self.player2.curHurtBox.topleft)
+        player1Frame, self.player1HitBox = self.player1.currentFrame()
+        player2Frame, self.player2HitBox = self.player2.currentFrame()
+        print self.player1HitBox
+        screen.blit(player1Frame, self.player1.curHurtBox.topleft)
+        screen.blit(player2Frame, self.player2.curHurtBox.topleft)
+        #screen.blit(self.player1.currentFrame()[0], self.player1.curHurtBox.topleft)
+        #screen.blit(self.player2.currentFrame()[0], self.player2.curHurtBox.topleft)
 
     def keyPressed(self, down, key):
         self.player1.keyPressed(down, key)
