@@ -99,6 +99,7 @@ class Character(pygame.sprite.Sprite):
         self.curHurtBox = pygame.Rect(x, y, 66, 96)
         self.facingLeft = False
         sourceFile = open('datafile.txt')
+        self.moveList = {}
         #Read all the data from the file
         while True:
             i = sourceFile.readline()
@@ -118,6 +119,7 @@ class Character(pygame.sprite.Sprite):
                 self.walkforwardAnimation = load_animation('RyuSFA3.png', tempAnimation)
             if i == 'normalMove\n':
                 moveName = sourceFile.readline()
+                moveName = moveName[:-1]
                 moveInput = sourceFile.readline()
                 i = sourceFile.readline()
                 # read in animation
@@ -130,7 +132,7 @@ class Character(pygame.sprite.Sprite):
                 while i != '&\n':
                     hitBoxCoords.append(convertTextToCode(i))
                     i = sourceFile.readline()
-                self.punch = Move(moveName, moveInput, load_animation('RyuSFA3.png', tempAnimation), hitBoxCoords)
+                self.moveList[moveName] = Move(moveName, moveInput, load_animation('RyuSFA3.png', tempAnimation), hitBoxCoords)    
             if i == 'crouch\n':
                 self.crouchAnimation = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
             if i == 'hit\n':
@@ -141,7 +143,6 @@ class Character(pygame.sprite.Sprite):
                 self.hitAnimation = load_animation('RyuSFA3.png', tempAnimation)
             if i == '@':
                 break
-        self.moveList = {'JAB': self.punch}
         self.curAnimation = self.neutralAnimation
         self.inputChain = [] # Keeps track of inputs for interpretting
         self.blockImage = None
@@ -175,9 +176,6 @@ class Character(pygame.sprite.Sprite):
                 self.curAnimationFrame = 0
                 self.inputChain.append('DOWN')
             if button == K_a:
-                #self.punch.initialize()
-                #self.curMove = self.punch
-                #self.curAnimation = self.punch.animation
                 self.inputChain.append('JAB')
             if button == K_s:
                 self.getHit(10)

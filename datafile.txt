@@ -14,7 +14,7 @@ walkingForward
 454, 237, 64, 94
 &
 normalMove
-punch
+JAB
 A
 433, 699, 78, 94
 523, 699, 108, 94
