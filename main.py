@@ -90,6 +90,7 @@ class Character(pygame.sprite.Sprite):
         self.meters = []
         self.health = 0
         self.velocity = [0,0]
+        self.grounded = True
         self.hitStun = 0
         self.curAnimation = []
         self.state = 'neutral'
@@ -151,6 +152,12 @@ class Character(pygame.sprite.Sprite):
         self.interpretInputs()
         if self.curMove is None and self.hitStun == 0:
             self.curHurtBox.x += self.velocity[0]
+            if not self.grounded:
+                self.curHurtBox.y += self.velocity[1]
+                self.velocity[1] += 1
+                if self.curHurtBox.bottom >= 300:
+                    self.curHurtBox.bottom = 300
+                    self.grounded = True
             self.curAnimationFrame += 1
             if self.curAnimationFrame >= len(self.curAnimation): #Will need some more complicated parsing for state here later
                 self.curAnimationFrame = 0
@@ -188,6 +195,9 @@ class Character(pygame.sprite.Sprite):
                 self.inputChain.append('JAB')
             if button == K_s:
                 self.getHit(10)
+            if button == K_UP:
+                self.velocity[1] = -11
+                self.grounded = False
         # On button release
         else:
             if button == K_RIGHT:
