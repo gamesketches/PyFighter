@@ -162,23 +162,33 @@ class Character(pygame.sprite.Sprite):
                 self.curAnimationFrame = 0
 
     def keyPressed(self, state, button):
+        # If Keys pushed down
         if state is True:
             if button == K_RIGHT:
-                self.keysDown.append('RIGHT')
-                self.curAnimation = self.walkforwardAnimation
-                self.curAnimationFrame = 0
-                self.inputChain.append('RIGHT')
+                if 'DOWN' in self.keysDown:
+                    self.inputChain.append('DOWNRIGHT')
+                    self.keysDown.append('RIGHT')
+                else:
+                    self.keysDown.append('RIGHT')
+                    self.curAnimation = self.walkforwardAnimation
+                    self.curAnimationFrame = 0
+                    self.inputChain.append('RIGHT')
             if button == K_LEFT:
                 self.keysDown.append('LEFT')
             if button == K_DOWN:
-                self.keysDown.append('DOWN')
-                self.curAnimation = self.crouchAnimation
-                self.curAnimationFrame = 0
-                self.inputChain.append('DOWN')
+                if 'RIGHT' in self.keysDown:
+                    self.inputChain.append('DOWNRIGHT')
+                    self.keysDown.append('DOWN')
+                else:
+                    self.keysDown.append('DOWN')
+                    self.curAnimation = self.crouchAnimation
+                    self.curAnimationFrame = 0
+                    self.inputChain.append('DOWN')
             if button == K_a:
                 self.inputChain.append('JAB')
             if button == K_s:
                 self.getHit(10)
+        # On button release
         else:
             if button == K_RIGHT:
                 del self.keysDown[self.keysDown.index('RIGHT')]
@@ -187,15 +197,18 @@ class Character(pygame.sprite.Sprite):
                 del self.keysDown[self.keysDown.index('LEFT')]
             if button == K_DOWN:
                 del self.keysDown[self.keysDown.index('DOWN')]
+                if 'RIGHT' in self.keysDown:
+                    self.inputChain.append('RIGHT')
                 self.curAnimation = self.neutralAnimation
                 
 
     def interpretInputs(self):
         if len(self.inputChain): #and self.moveList.get(self.inputChain[-1]) is not None:
             if self.inputChain[-1] == 'JAB':
-                if ",".join(self.inputChain[-3:]) == 'DOWN,RIGHT,JAB':
+                if ",".join(self.inputChain[-4:]) == 'DOWN,DOWNRIGHT,RIGHT,JAB':
                     print "hadoken"
                 else:
+                    print self.inputChain[-4:]
                     self.curMove = self.moveList.get(self.inputChain[-1])
                     self.curMove.initialize()
                 del self.inputChain[:]
