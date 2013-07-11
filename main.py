@@ -193,15 +193,9 @@ class Character(pygame.sprite.Sprite):
                 
 
     def interpretInputs(self):
-        #if self.inputChain == ['DOWN', 'RIGHT']:
-        #    print "hadoken"
-        #    self.inputChain.append('TERMINAL')
-        #if self.inputChain[-1] == 'TERMINAL':
-        #    del self.inputChain[:]
         if len(self.inputChain): #and self.moveList.get(self.inputChain[-1]) is not None:
             if self.inputChain[-1] == 'JAB':
-                print self.inputChain[-3:]
-                if self.inputChain[-3:] == ['DOWN', 'RIGHT', 'JAB']:
+                if ",".join(self.inputChain[-3:]) == 'DOWN,RIGHT,JAB':
                     print "hadoken"
                 else:
                     self.curMove = self.moveList.get(self.inputChain[-1])
