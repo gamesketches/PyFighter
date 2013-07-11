@@ -293,12 +293,7 @@ def main():
     #Create the background
     background = pygame.Surface(screen.get_size())
     background = background.convert()
-    background.fill((250, 250, 250))
-
-    #Create the background
-    background = pygame.Surface(screen.get_size())
-    backgtround = background.convert()
-    background.fill((250, 250, 250))
+    background.fill((0, 0, 0))
 
     #Display The Background
     screen.blit(background, (0,0))
