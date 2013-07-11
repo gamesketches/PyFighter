@@ -1,4 +1,4 @@
-import pygame, sys, os
+import pygame, sys, os, character
 from pygame.locals import *
 
 if not pygame.font: print 'Warning, fonts disabled'
@@ -198,10 +198,15 @@ class Character(pygame.sprite.Sprite):
         #    self.inputChain.append('TERMINAL')
         #if self.inputChain[-1] == 'TERMINAL':
         #    del self.inputChain[:]
-        if len(self.inputChain) and self.moveList.get(self.inputChain[-1]) is not None:
-            self.curMove = self.moveList.get(self.inputChain[-1])
-            self.curMove.initialize()
-            del self.inputChain[:]
+        if len(self.inputChain): #and self.moveList.get(self.inputChain[-1]) is not None:
+            if self.inputChain[-1] == 'JAB':
+                print self.inputChain[-3:]
+                if self.inputChain[-3:] == ['DOWN', 'RIGHT', 'JAB']:
+                    print "hadoken"
+                else:
+                    self.curMove = self.moveList.get(self.inputChain[-1])
+                    self.curMove.initialize()
+                del self.inputChain[:]
         if 'DOWN' in self.keysDown:
             self.velocity[0]= 0
         elif 'RIGHT' in self.keysDown:
@@ -226,13 +231,13 @@ class Character(pygame.sprite.Sprite):
                 self.curMove = None
                 self.curAnimation = self.neutralAnimation
             curHitBox = curHitBox.move(self.curHurtBox.x, self.curHurtBox.y)
-            return returnVal, curHitBox
+            return pygame.transform.flip(returnVal, self.facingLeft, False), curHitBox
 
 class CombatManager():
     """ Class for managing collisions, inputs, gamestate, etc. """
     def __init__(self):
-        self.player1 = Character(0,0)
-        self.player2 = Character (100,0)
+        self.player1 = Character(300,200)
+        self.player2 = Character (600,200)
         self.player1HitBox = Rect(-1000,0,0,0)
         self.player2HitBox = None
 
@@ -267,7 +272,7 @@ def main():
     
     #Initialize Everything
     pygame.init()
-    screen = pygame.display.set_mode((468, 100))
+    screen = pygame.display.set_mode((1000, 300))
     pygame.mouse.set_visible(0)
 
     #Create the background
