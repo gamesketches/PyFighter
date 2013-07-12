@@ -111,7 +111,8 @@ class Character(pygame.sprite.Sprite):
                     tempAnimation.append(convertTextToCode(i))
                     i = sourceFile.readline()
                 self.neutralAnimation = load_animation('RyuSFA3.png', tempAnimation)
-
+            if i == 'standingBlock\n':
+                    self.blockAnimation = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
             if i == 'walkingForward\n':
                 i = sourceFile.readline()
                 while i != '&\n':
@@ -205,7 +206,7 @@ class Character(pygame.sprite.Sprite):
             if button == K_a:
                 self.inputChain.append('JAB')
             if button == K_s:
-                self.getHit(10)
+                self.curAnimation = self.blockAnimation
             if button == K_UP:
                 self.velocity[1] = -11
                 self.grounded = False
