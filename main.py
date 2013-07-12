@@ -98,7 +98,7 @@ class Character(pygame.sprite.Sprite):
         self.curMove = None
         self.keysDown = []
         self.curHurtBox = pygame.Rect(x, y, 66, 96)
-        self.facingLeft = False
+        self.facingRight = True
         sourceFile = open('datafile.txt')
         self.moveList = {}
         #Read all the data from the file
@@ -172,7 +172,7 @@ class Character(pygame.sprite.Sprite):
         # If Keys pushed down
         if state is True:
             if button == K_RIGHT:
-                if not self.facingLeft:
+                if self.facingRight:
                     if 'DOWN' in self.keysDown:
                         self.inputChain.append('DOWNTOWARD')
                         self.keysDown.append('TOWARD')
@@ -192,7 +192,7 @@ class Character(pygame.sprite.Sprite):
                         #self.curAnimationFrame = 0
                         self.inputChain.append('BACK')
             if button == K_LEFT:
-                self.keysDown.append('LEFT')
+                self.keysDown.append('BACK')
             if button == K_DOWN:
                 if 'TOWARD' in self.keysDown:
                     self.inputChain.append('DOWNTOWARD')
@@ -215,7 +215,7 @@ class Character(pygame.sprite.Sprite):
                 del self.keysDown[self.keysDown.index('TOWARD')]
                 self.curAnimation = self.neutralAnimation
             if button == K_LEFT:
-                del self.keysDown[self.keysDown.index('LEFT')]
+                del self.keysDown[self.keysDown.index('BACK')]
             if button == K_DOWN:
                 del self.keysDown[self.keysDown.index('DOWN')]
                 if 'TOWARD' in self.keysDown:
@@ -236,9 +236,11 @@ class Character(pygame.sprite.Sprite):
         if 'DOWN' in self.keysDown:
             self.velocity[0]= 0
         elif 'TOWARD' in self.keysDown:
-            self.velocity[0] = 10
-        elif 'LEFT' in self.keysDown:
-            self.velocity[0] = -10
+            if self.facingRight: self.velocity[0] = 10
+            else: self.velocity[0] = -10
+        elif 'BACK' in self.keysDown:
+            if self.facingRight: self.velocity[0] = -10
+            else: self.velocity[0] = 10
         else:
             self.velocity[0] = 0
 
@@ -250,14 +252,14 @@ class Character(pygame.sprite.Sprite):
 
     def currentFrame(self):
         if self.curMove is None:
-                return pygame.transform.flip(self.curAnimation[self.curAnimationFrame], self.facingLeft, False), Rect(-1000,0,0,0)
+                return pygame.transform.flip(self.curAnimation[self.curAnimationFrame], not self.facingRight, False), Rect(-1000,0,0,0)
         else:
             returnVal, curHitBox = self.curMove.nextFrame()
             if self.curMove.done:
                 self.curMove = None
                 self.curAnimation = self.neutralAnimation
             curHitBox = curHitBox.move(self.curHurtBox.x, self.curHurtBox.y)
-            return pygame.transform.flip(returnVal, self.facingLeft, False), curHitBox
+            return pygame.transform.flip(returnVal, not self.facingRight, False), curHitBox
 
 class CombatManager():
     """ Class for managing collisions, inputs, gamestate, etc. """
