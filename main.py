@@ -172,19 +172,30 @@ class Character(pygame.sprite.Sprite):
         # If Keys pushed down
         if state is True:
             if button == K_RIGHT:
-                if 'DOWN' in self.keysDown:
-                    self.inputChain.append('DOWNRIGHT')
-                    self.keysDown.append('RIGHT')
+                if not self.facingLeft:
+                    if 'DOWN' in self.keysDown:
+                        self.inputChain.append('DOWNTOWARD')
+                        self.keysDown.append('TOWARD')
+                    else:
+                        self.keysDown.append('TOWARD')
+                        self.curAnimation = self.walkforwardAnimation
+                        self.curAnimationFrame = 0
+                        self.inputChain.append('TOWARD')
                 else:
-                    self.keysDown.append('RIGHT')
-                    self.curAnimation = self.walkforwardAnimation
-                    self.curAnimationFrame = 0
-                    self.inputChain.append('RIGHT')
+                    if 'DOWN' in self.keysDown:
+                        self.inputChain.append('DOWNBACK')
+                        self.keysDown.append('BACK')
+                    else:
+                        self.keysDown.append('BACK')
+                        #put walkbackwards animation in here
+                        #self.curAnimation = self.walkBackwardAnimation
+                        #self.curAnimationFrame = 0
+                        self.inputChain.append('BACK')
             if button == K_LEFT:
                 self.keysDown.append('LEFT')
             if button == K_DOWN:
-                if 'RIGHT' in self.keysDown:
-                    self.inputChain.append('DOWNRIGHT')
+                if 'TOWARD' in self.keysDown:
+                    self.inputChain.append('DOWNTOWARD')
                     self.keysDown.append('DOWN')
                 else:
                     self.keysDown.append('DOWN')
@@ -201,21 +212,21 @@ class Character(pygame.sprite.Sprite):
         # On button release
         else:
             if button == K_RIGHT:
-                del self.keysDown[self.keysDown.index('RIGHT')]
+                del self.keysDown[self.keysDown.index('TOWARD')]
                 self.curAnimation = self.neutralAnimation
             if button == K_LEFT:
                 del self.keysDown[self.keysDown.index('LEFT')]
             if button == K_DOWN:
                 del self.keysDown[self.keysDown.index('DOWN')]
-                if 'RIGHT' in self.keysDown:
-                    self.inputChain.append('RIGHT')
+                if 'TOWARD' in self.keysDown:
+                    self.inputChain.append('TOWARD')
                 self.curAnimation = self.neutralAnimation
                 
 
     def interpretInputs(self):
-        if len(self.inputChain): #and self.moveList.get(self.inputChain[-1]) is not None:
+        if len(self.inputChain):
             if self.inputChain[-1] == 'JAB':
-                if ",".join(self.inputChain[-4:]) == 'DOWN,DOWNRIGHT,RIGHT,JAB':
+                if ",".join(self.inputChain[-4:]) == 'DOWN,DOWNTOWARD,TOWARD,JAB':
                     print "hadoken"
                 else:
                     print self.inputChain[-4:]
@@ -224,10 +235,10 @@ class Character(pygame.sprite.Sprite):
                 del self.inputChain[:]
         if 'DOWN' in self.keysDown:
             self.velocity[0]= 0
-        elif 'RIGHT' in self.keysDown:
-            self.velocity[0] = 1
+        elif 'TOWARD' in self.keysDown:
+            self.velocity[0] = 10
         elif 'LEFT' in self.keysDown:
-            self.velocity[0] = -1
+            self.velocity[0] = -10
         else:
             self.velocity[0] = 0
 
