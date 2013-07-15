@@ -71,12 +71,21 @@ def convertTextToCode(line):
     return tuple(nums)
 
 class HitBox(pygame.Rect):
-    def __init__(self, dimensions, properties):
+    def __init__(self, dimensions=(-1000,0,0,0), properties={'damage':0,'hitstun':0,'knockback':0}):
         pygame.Rect.__init__(self,dimensions)
         #Fill this out depending on your game
-        self.damage = properties[damage]
-        self.hitStun = properties[hitStun]
-        self.knockBack = properties[knockBack]
+        self.damage = properties['damage']
+        self.hitStun = properties['hitstun']
+        self.knockBack = properties['knockback']
+
+    def getProperties(self):
+        return (self.damage, self.hitStun, self.knockBack)
+
+    def adjustHitBox(self, x, y):
+        # Shenanigans because pygame.Rect.move returns a rect :\
+        tempRect = self.move(x - self.x,y - self.y)
+        self.x = tempRect.x
+        self.y = tempRect.y
 
 class Move():
     def __init__(self, moveName, inputs, animation, hitboxes, properties):
@@ -85,7 +94,8 @@ class Move():
         self.animation = animation
         self.hitboxes = []
         for i in hitboxes:
-            self.hitboxes.append(Rect(i))
+            #self.hitboxes.append(Rect(i))
+            self.hitboxes.append(HitBox(i,properties))
         self.animationFrame = 0
         self.done = False
         
@@ -142,7 +152,8 @@ class Character(pygame.sprite.Sprite):
                 moveName = sourceFile.readline()
                 moveName = moveName[:-1]
                 moveInput = sourceFile.readline()
-                stats = convertTextToCode(sourceFile.readline())
+                tempProperties = convertTextToCode(sourceFile.readline())
+                properties = {'damage':tempProperties[0], 'hitstun':tempProperties[1],'knockback':tempProperties[2]}
                 i = sourceFile.readline()
                 # read in animation
                 while i != '&\n':
@@ -154,7 +165,7 @@ class Character(pygame.sprite.Sprite):
                 while i != '&\n':
                     hitBoxCoords.append(convertTextToCode(i))
                     i = sourceFile.readline()
-                self.moveList[moveName] = Move(moveName, moveInput, load_animation('RyuSFA3.png', tempAnimation), hitBoxCoords, stats)    
+                self.moveList[moveName] = Move(moveName, moveInput, load_animation('RyuSFA3.png', tempAnimation), hitBoxCoords, properties)    
             if i == 'crouch\n':
                 self.crouchAnimation = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
             if i == 'hit\n':
@@ -174,7 +185,6 @@ class Character(pygame.sprite.Sprite):
             self.hitStun -= 1
             self.curHurtBox.x += self.velocity[0]
             self.velocity[0] = towardsZero(self.velocity[0], 1)
-            print "In Hitstun, ", self.velocity[0]
             if self.hitStun <= 0:
                 self.state = 'neutral'
                 self.curAnimation = self.neutralAnimation
@@ -286,26 +296,27 @@ class Character(pygame.sprite.Sprite):
         else:
             self.velocity[0] = 0
 
-    def getHit(self, damage, hitStun, knockBack):
+    def getHit(self, properties):
         self.curAnimation = self.hitAnimation
         self.curAnimationFrame = 0
-        self.hitStun = hitStun
+        #Put in damage here
+        self.hitStun = properties[1]
         if self.facingRight:
-            self.velocity[0] = knockBack * -1
+            self.velocity[0] = properties[2] * -1
         else:
-            self.velocity[0] = knockBack
+            self.velocity[0] = properties[2]
         self.state = 'hit'
 
     def currentFrame(self):
         if self.curMove is None:
-                return pygame.transform.flip(self.curAnimation[self.curAnimationFrame], not self.facingRight, False), Rect(-1000,0,0,0)
+                return pygame.transform.flip(self.curAnimation[self.curAnimationFrame], not self.facingRight, False), HitBox()
         else:
             returnVal, curHitBox = self.curMove.nextFrame()
             if self.curMove.done:
                 self.curMove = None
                 self.curAnimation = self.neutralAnimation
                 self.state = 'neutral'
-            curHitBox = curHitBox.move(self.curHurtBox.x, self.curHurtBox.y)
+            curHitBox.adjustHitBox(self.curHurtBox.x + self.curHurtBox.w, self.curHurtBox.y)
             return pygame.transform.flip(returnVal, not self.facingRight, False), curHitBox
 
 class CombatManager():
@@ -316,8 +327,8 @@ class CombatManager():
         player2InputKeys = {K_u: 'JAB'}
         self.player1 = Character(300,200, player1InputKeys, True)
         self.player2 = Character (600,200, player2InputKeys, False)
-        self.player1HitBox = Rect(-1000,0,0,0)
-        self.player2HitBox = Rect(-1000,0,0,0)
+        self.player1HitBox = HitBox()
+        self.player2HitBox = HitBox()
 
     def update(self):
         if self.player1.curHurtBox.x >= self.player2.curHurtBox.x:
@@ -331,9 +342,9 @@ class CombatManager():
 
     def checkCollisions(self):
         if self.player2.curHurtBox.colliderect(self.player1HitBox):
-            self.player2.getHit(10,10,10)
+            self.player2.getHit(self.player1HitBox.getProperties())
         if self.player1.curHurtBox.colliderect(self.player2HitBox):
-            self.player1.getHit(10,10,10)
+            self.player1.getHit(self.player2HitBox.getProperties())
 
     def updateCharacters(self):
         self.player1.update(self.player2.state)
