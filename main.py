@@ -150,7 +150,13 @@ class Character(pygame.sprite.Sprite):
         self.blockImage = None
 
     def update(self, gameState):
-        self.interpretInputs()
+        self.interpretInputs(gameState)
+        if self.state == 'blocking' and gameState != 'attacking':
+            self.state = 'neutral'
+            self.curAnimation = self.neutralAnimation
+            self.curAnimationFrame = 0
+        elif self.state == 'blocking':
+            self.curAnimation = self.blockAnimation
         if self.curMove is None and self.hitStun == 0:
             self.curHurtBox.x += self.velocity[0]
             if not self.grounded:
@@ -224,9 +230,10 @@ class Character(pygame.sprite.Sprite):
                 self.curAnimation = self.neutralAnimation
                 
 
-    def interpretInputs(self):
+    def interpretInputs(self, gameState):
         if len(self.inputChain):
             if self.inputChain[-1] == 'JAB':
+                self.state = 'attacking'
                 if ",".join(self.inputChain[-4:]) == 'DOWN,DOWNTOWARD,TOWARD,JAB':
                     print "hadoken"
                 else:
@@ -240,8 +247,11 @@ class Character(pygame.sprite.Sprite):
             if self.facingRight: self.velocity[0] = 10
             else: self.velocity[0] = -10
         elif 'BACK' in self.keysDown:
-            if self.facingRight: self.velocity[0] = -10
+            if gameState is 'attacking':
+                self.state = 'blocking'
+            elif self.facingRight: self.velocity[0] = -10
             else: self.velocity[0] = 10
+            
         else:
             self.velocity[0] = 0
 
@@ -259,6 +269,7 @@ class Character(pygame.sprite.Sprite):
             if self.curMove.done:
                 self.curMove = None
                 self.curAnimation = self.neutralAnimation
+                self.state = 'neutral'
             curHitBox = curHitBox.move(self.curHurtBox.x, self.curHurtBox.y)
             return pygame.transform.flip(returnVal, not self.facingRight, False), curHitBox
 
@@ -285,8 +296,8 @@ class CombatManager():
             self.player2.getHit(10)
 
     def updateCharacters(self):
-        self.player1.update(None)
-        self.player2.update(None)
+        self.player1.update('attacking')
+        self.player2.update(self.player1.state)
 
     def drawPlayers(self, screen):
         player1Frame, self.player1HitBox = self.player1.currentFrame()
