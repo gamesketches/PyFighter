@@ -1,0 +1,50 @@
+if button == K_RIGHT:
+                if self.facingRight:
+                    if 'DOWN' in self.keysDown:
+                        self.inputChain.append('DOWNTOWARD')
+                        self.keysDown.append('TOWARD')
+                    else:
+                        self.keysDown.append('TOWARD')
+                        self.curAnimation = self.walkforwardAnimation
+                        self.curAnimationFrame = 0
+                        self.inputChain.append('TOWARD')
+                else:
+                    if 'DOWN' in self.keysDown:
+                        self.inputChain.append('DOWNBACK')
+                        self.keysDown.append('BACK')
+                    else:
+                        self.keysDown.append('BACK')
+                        #put walkbackwards animation in here
+                        #self.curAnimation = self.walkBackwardAnimation
+                        #self.curAnimationFrame = 0
+                        self.inputChain.append('BACK')
+            if button == K_LEFT:
+                self.keysDown.append('BACK')
+            if button == K_DOWN:
+                if 'TOWARD' in self.keysDown:
+                    self.inputChain.append('DOWNTOWARD')
+                    self.keysDown.append('DOWN')
+                else:
+                    self.keysDown.append('DOWN')
+                    self.curAnimation = self.crouchAnimation
+                    self.curAnimationFrame = 0
+                    self.inputChain.append('DOWN')
+            if button == K_a:
+                self.inputChain.append('JAB')
+            if button == K_s:
+                self.curAnimation = self.blockAnimation
+            if button == K_UP:
+                self.velocity[1] = -11
+                self.grounded = False
+        # On button release
+        else:
+            if button == K_RIGHT:
+                del self.keysDown[self.keysDown.index('TOWARD')]
+                self.curAnimation = self.neutralAnimation
+            if button == K_LEFT:
+                del self.keysDown[self.keysDown.index('BACK')]
+            if button == K_DOWN:
+                del self.keysDown[self.keysDown.index('DOWN')]
+                if 'TOWARD' in self.keysDown:
+                    self.inputChain.append('TOWARD')
+                self.curAnimation = self.neutralAnimation

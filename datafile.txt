@@ -16,6 +16,7 @@ walkingForward
 normalMove
 JAB
 A
+10,10,5
 433, 699, 78, 94
 523, 699, 108, 94
 &

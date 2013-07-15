@@ -57,8 +57,7 @@ def convertTextToCode(line):
             tempNum = ''
         else:
             tempNum += line[i]
-
-    return (nums[0], nums[1], nums[2], nums[3])
+    return tuple(nums)
 
 class Move():
     def __init__(self, moveName, inputs, animation, hitboxes):
@@ -85,7 +84,7 @@ class Move():
 
 class Character(pygame.sprite.Sprite):
     """ Class holds all info on a Character and interprets it's actions """
-    def __init__(self, x, y, inputs):
+    def __init__(self, x, y, inputs, facingRight):
         pygame.sprite.Sprite.__init__(self)
         self.meters = []
         self.health = 0
@@ -98,7 +97,7 @@ class Character(pygame.sprite.Sprite):
         self.curMove = None
         self.keysDown = []
         self.curHurtBox = pygame.Rect(x, y, 66, 96)
-        self.facingRight = True
+        self.facingRight = facingRight
         self.inputs = inputs
         sourceFile = open('datafile.txt')
         self.moveList = {}
@@ -124,6 +123,7 @@ class Character(pygame.sprite.Sprite):
                 moveName = sourceFile.readline()
                 moveName = moveName[:-1]
                 moveInput = sourceFile.readline()
+                stats = convertTextToCode(sourceFile.readline())
                 i = sourceFile.readline()
                 # read in animation
                 while i != '&\n':
@@ -283,11 +283,11 @@ class CombatManager():
     def __init__(self):
         player1InputKeys = {K_a: 'JAB', K_UP: 'UP', K_RIGHT: 'RIGHT', K_DOWN: 'DOWN', \
                             K_LEFT: 'LEFT'}
-        player2InputKeys = {K_u: 'LEFT'}
-        self.player1 = Character(300,200, player1InputKeys)
-        self.player2 = Character (600,200, player2InputKeys)
+        player2InputKeys = {K_u: 'JAB'}
+        self.player1 = Character(300,200, player1InputKeys, True)
+        self.player2 = Character (600,200, player2InputKeys, False)
         self.player1HitBox = Rect(-1000,0,0,0)
-        self.player2HitBox = None
+        self.player2HitBox = Rect(-1000,0,0,0)
 
     def update(self):
         if self.player1.curHurtBox.x >= self.player2.curHurtBox.x:
@@ -302,9 +302,11 @@ class CombatManager():
     def checkCollisions(self):
         if self.player2.curHurtBox.colliderect(self.player1HitBox):
             self.player2.getHit(10)
+        if self.player1.curHurtBox.colliderect(self.player2HitBox):
+            self.player1.getHit(10)
 
     def updateCharacters(self):
-        self.player1.update('attacking')
+        self.player1.update(self.player2.state)
         self.player2.update(self.player1.state)
 
     def drawPlayers(self, screen):
