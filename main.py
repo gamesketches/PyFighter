@@ -35,6 +35,17 @@ def load_animation(filename, coords, colorkey=None):
 
     return theAnimation
 
+def towardsZero(num, interval):
+    if num > 0:
+        num -= interval
+        if num < 0:
+            return 0
+    else:
+        num += interval
+        if num > 0:
+            return 0
+    return num
+
 def load_sound(name):
     class NoneSound:
         def play(self):pass
@@ -159,30 +170,37 @@ class Character(pygame.sprite.Sprite):
         self.blockImage = None
 
     def update(self, gameState):
-        self.interpretInputs(gameState)
-        if self.state == 'blocking' and gameState != 'attacking':
-            self.state = 'neutral'
-            self.curAnimation = self.neutralAnimation
-            self.curAnimationFrame = 0
-        elif self.state == 'blocking':
-            self.curAnimation = self.blockAnimation
-        if self.curMove is None and self.hitStun == 0:
-            self.curHurtBox.x += self.velocity[0]
-            if not self.grounded:
-                self.curHurtBox.y += self.velocity[1]
-                self.velocity[1] += 1
-                if self.curHurtBox.bottom >= 300:
-                    self.curHurtBox.bottom = 300
-                    self.grounded = True
-            self.curAnimationFrame += 1
-            if self.curAnimationFrame >= len(self.curAnimation): #Will need some more complicated parsing for state here later
-                self.curAnimationFrame = 0
-        elif self.hitStun:
+        if self.hitStun:
             self.hitStun -= 1
+            self.curHurtBox.x += self.velocity[0]
+            self.velocity[0] = towardsZero(self.velocity[0], 1)
+            print "In Hitstun, ", self.velocity[0]
             if self.hitStun <= 0:
                 self.state = 'neutral'
                 self.curAnimation = self.neutralAnimation
                 self.curAnimationFrame = 0
+        else:
+            self.interpretInputs(gameState)
+            #If opponent is not attacking, return to neutral
+            if self.state == 'blocking' and gameState != 'attacking':
+                self.state = 'neutral'
+                self.curAnimation = self.neutralAnimation
+                self.curAnimationFrame = 0
+            # If opponent is attacking and you're holding back
+            elif self.state == 'blocking':
+                self.curAnimation = self.blockAnimation
+            #If you are just walking
+            if self.curMove is None and self.hitStun == 0:
+                self.curHurtBox.x += self.velocity[0]
+                if not self.grounded:
+                    self.curHurtBox.y += self.velocity[1]
+                    self.velocity[1] += 1
+                    if self.curHurtBox.bottom >= 300:
+                        self.curHurtBox.bottom = 300
+                        self.grounded = True
+                self.curAnimationFrame += 1
+                if self.curAnimationFrame >= len(self.curAnimation): #Will need some more complicated parsing for state here later
+                    self.curAnimationFrame = 0
 
     def keyPressed(self, state, pressedButton):
         # If Keys pushed down
@@ -268,10 +286,14 @@ class Character(pygame.sprite.Sprite):
         else:
             self.velocity[0] = 0
 
-    def getHit(self, hitStun):
+    def getHit(self, damage, hitStun, knockBack):
         self.curAnimation = self.hitAnimation
         self.curAnimationFrame = 0
-        self.hitStun = 10
+        self.hitStun = hitStun
+        if self.facingRight:
+            self.velocity[0] = knockBack * -1
+        else:
+            self.velocity[0] = knockBack
         self.state = 'hit'
 
     def currentFrame(self):
@@ -309,9 +331,9 @@ class CombatManager():
 
     def checkCollisions(self):
         if self.player2.curHurtBox.colliderect(self.player1HitBox):
-            self.player2.getHit(10)
+            self.player2.getHit(10,10,10)
         if self.player1.curHurtBox.colliderect(self.player2HitBox):
-            self.player1.getHit(10)
+            self.player1.getHit(10,10,10)
 
     def updateCharacters(self):
         self.player1.update(self.player2.state)
