@@ -59,8 +59,16 @@ def convertTextToCode(line):
             tempNum += line[i]
     return tuple(nums)
 
+class HitBox(pygame.Rect):
+    def __init__(self, dimensions, properties):
+        pygame.Rect.__init__(self,dimensions)
+        #Fill this out depending on your game
+        self.damage = properties[damage]
+        self.hitStun = properties[hitStun]
+        self.knockBack = properties[knockBack]
+
 class Move():
-    def __init__(self, moveName, inputs, animation, hitboxes):
+    def __init__(self, moveName, inputs, animation, hitboxes, properties):
         self.name = moveName
         self.inputs = inputs
         self.animation = animation
@@ -135,7 +143,7 @@ class Character(pygame.sprite.Sprite):
                 while i != '&\n':
                     hitBoxCoords.append(convertTextToCode(i))
                     i = sourceFile.readline()
-                self.moveList[moveName] = Move(moveName, moveInput, load_animation('RyuSFA3.png', tempAnimation), hitBoxCoords)    
+                self.moveList[moveName] = Move(moveName, moveInput, load_animation('RyuSFA3.png', tempAnimation), hitBoxCoords, stats)    
             if i == 'crouch\n':
                 self.crouchAnimation = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
             if i == 'hit\n':
