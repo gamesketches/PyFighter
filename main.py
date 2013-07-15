@@ -85,7 +85,7 @@ class Move():
 
 class Character(pygame.sprite.Sprite):
     """ Class holds all info on a Character and interprets it's actions """
-    def __init__(self, x, y):
+    def __init__(self, x, y, inputs):
         pygame.sprite.Sprite.__init__(self)
         self.meters = []
         self.health = 0
@@ -99,6 +99,7 @@ class Character(pygame.sprite.Sprite):
         self.keysDown = []
         self.curHurtBox = pygame.Rect(x, y, 66, 96)
         self.facingRight = True
+        self.inputs = inputs
         sourceFile = open('datafile.txt')
         self.moveList = {}
         #Read all the data from the file
@@ -175,10 +176,14 @@ class Character(pygame.sprite.Sprite):
                 self.curAnimation = self.neutralAnimation
                 self.curAnimationFrame = 0
 
-    def keyPressed(self, state, button):
+    def keyPressed(self, state, pressedButton):
         # If Keys pushed down
+        if pressedButton in self.inputs:
+            button = self.inputs.get(pressedButton)
+        else:
+            return
         if state is True:
-            if button == K_RIGHT:
+            if button == 'RIGHT':
                 if self.facingRight:
                     if 'DOWN' in self.keysDown:
                         self.inputChain.append('DOWNTOWARD')
@@ -198,9 +203,9 @@ class Character(pygame.sprite.Sprite):
                         #self.curAnimation = self.walkBackwardAnimation
                         #self.curAnimationFrame = 0
                         self.inputChain.append('BACK')
-            if button == K_LEFT:
+            if button == 'LEFT':
                 self.keysDown.append('BACK')
-            if button == K_DOWN:
+            if button == 'DOWN':
                 if 'TOWARD' in self.keysDown:
                     self.inputChain.append('DOWNTOWARD')
                     self.keysDown.append('DOWN')
@@ -209,21 +214,21 @@ class Character(pygame.sprite.Sprite):
                     self.curAnimation = self.crouchAnimation
                     self.curAnimationFrame = 0
                     self.inputChain.append('DOWN')
-            if button == K_a:
+            if button == 'JAB':
                 self.inputChain.append('JAB')
             if button == K_s:
                 self.curAnimation = self.blockAnimation
-            if button == K_UP:
+            if button == 'UP':
                 self.velocity[1] = -11
                 self.grounded = False
         # On button release
         else:
-            if button == K_RIGHT:
+            if button == 'RIGHT':
                 del self.keysDown[self.keysDown.index('TOWARD')]
                 self.curAnimation = self.neutralAnimation
-            if button == K_LEFT:
+            if button == 'LEFT':
                 del self.keysDown[self.keysDown.index('BACK')]
-            if button == K_DOWN:
+            if button == 'DOWN':
                 del self.keysDown[self.keysDown.index('DOWN')]
                 if 'TOWARD' in self.keysDown:
                     self.inputChain.append('TOWARD')
@@ -276,8 +281,11 @@ class Character(pygame.sprite.Sprite):
 class CombatManager():
     """ Class for managing collisions, inputs, gamestate, etc. """
     def __init__(self):
-        self.player1 = Character(300,200)
-        self.player2 = Character (600,200)
+        player1InputKeys = {K_a: 'JAB', K_UP: 'UP', K_RIGHT: 'RIGHT', K_DOWN: 'DOWN', \
+                            K_LEFT: 'LEFT'}
+        player2InputKeys = {K_u: 'LEFT'}
+        self.player1 = Character(300,200, player1InputKeys)
+        self.player2 = Character (600,200, player2InputKeys)
         self.player1HitBox = Rect(-1000,0,0,0)
         self.player2HitBox = None
 
@@ -307,6 +315,7 @@ class CombatManager():
 
     def keyPressed(self, down, key):
         self.player1.keyPressed(down, key)
+        self.player2.keyPressed(down, key)
 
 def main():
     
