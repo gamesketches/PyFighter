@@ -121,7 +121,7 @@ class Character(pygame.sprite.Sprite):
         self.grounded = True
         self.hitStun = 0
         self.curAnimation = []
-        self.state = 'neutral'
+        self.state = 'standing'
         self.curAnimationFrame = 0
         self.curMove = None
         self.keysDown = []
@@ -129,17 +129,43 @@ class Character(pygame.sprite.Sprite):
         self.facingRight = facingRight
         self.inputs = inputs
         sourceFile = open('datafile.txt')
-        self.moveList = {}
+        self.standingMoveList = {}
+        self.moveList= {}
         #Read all the data from the file
         while True:
             i = sourceFile.readline()
             tempAnimation = []
-            if i == 'neutral\n':
+            if i == '@':
+                break
+            if i == 'standing\n':
                 i = sourceFile.readline()
                 while i != '&\n':
                     tempAnimation.append(convertTextToCode(i))
                     i = sourceFile.readline()
-                self.neutralAnimation = load_animation('RyuSFA3.png', tempAnimation)
+                self.standingAnimation = load_animation('RyuSFA3.png', tempAnimation)
+                i = sourceFile.readline()
+                tempAnimation = []
+                while i != '@\n':
+                    if i == 'normalMove\n':
+                        moveName = sourceFile.readline()
+                        moveName = moveName[:-1]
+                        moveInput = sourceFile.readline()
+                        tempProperties = convertTextToCode(sourceFile.readline())
+                        properties = {'damage':tempProperties[0], 'hitstun':tempProperties[1],'knockback':tempProperties[2]}
+                        i = sourceFile.readline()
+                        # read in animation
+                        while i != '&\n':
+                            tempAnimation.append(convertTextToCode(i))
+                            i = sourceFile.readline()
+                        #read in hitboxes
+                        hitBoxCoords = []
+                        i = sourceFile.readline()
+                        while i != '&\n':
+                            hitBoxCoords.append(convertTextToCode(i))
+                            i = sourceFile.readline()
+                        self.standingMoveList[moveName] = Move(moveName, moveInput, load_animation('RyuSFA3.png', tempAnimation), hitBoxCoords, properties)
+                    i = sourceFile.readline()
+                self.moveList['standing'] = self.standingMoveList
             if i == 'standingBlock\n':
                     self.blockAnimation = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
             if i == 'walkingForward\n':
@@ -147,25 +173,7 @@ class Character(pygame.sprite.Sprite):
                 while i != '&\n':
                     tempAnimation.append(convertTextToCode(i))
                     i = sourceFile.readline()
-                self.walkforwardAnimation = load_animation('RyuSFA3.png', tempAnimation)
-            if i == 'normalMove\n':
-                moveName = sourceFile.readline()
-                moveName = moveName[:-1]
-                moveInput = sourceFile.readline()
-                tempProperties = convertTextToCode(sourceFile.readline())
-                properties = {'damage':tempProperties[0], 'hitstun':tempProperties[1],'knockback':tempProperties[2]}
-                i = sourceFile.readline()
-                # read in animation
-                while i != '&\n':
-                    tempAnimation.append(convertTextToCode(i))
-                    i = sourceFile.readline()
-                #read in hitboxes
-                hitBoxCoords = []
-                i = sourceFile.readline()
-                while i != '&\n':
-                    hitBoxCoords.append(convertTextToCode(i))
-                    i = sourceFile.readline()
-                self.moveList[moveName] = Move(moveName, moveInput, load_animation('RyuSFA3.png', tempAnimation), hitBoxCoords, properties)    
+                self.walkforwardAnimation = load_animation('RyuSFA3.png', tempAnimation)            
             if i == 'crouch\n':
                 self.crouchAnimation = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
             if i == 'hit\n':
@@ -174,9 +182,7 @@ class Character(pygame.sprite.Sprite):
                     tempAnimation.append(convertTextToCode(i))
                     i = sourceFile.readline()
                 self.hitAnimation = load_animation('RyuSFA3.png', tempAnimation)
-            if i == '@':
-                break
-        self.curAnimation = self.neutralAnimation
+        self.curAnimation = self.standingAnimation
         self.inputChain = [] # Keeps track of inputs for interpretting
         self.blockImage = None
 
@@ -186,15 +192,15 @@ class Character(pygame.sprite.Sprite):
             self.curHurtBox.x += self.velocity[0]
             self.velocity[0] = towardsZero(self.velocity[0], 1)
             if self.hitStun <= 0:
-                self.state = 'neutral'
-                self.curAnimation = self.neutralAnimation
+                self.state = 'standing'
+                self.curAnimation = self.standingAnimation
                 self.curAnimationFrame = 0
         else:
             self.interpretInputs(gameState)
             #If opponent is not attacking, return to neutral
             if self.state == 'blocking' and gameState != 'attacking':
-                self.state = 'neutral'
-                self.curAnimation = self.neutralAnimation
+                self.state = 'standing'
+                self.curAnimation = self.standingAnimation
                 self.curAnimationFrame = 0
             # If opponent is attacking and you're holding back
             elif self.state == 'blocking':
@@ -261,27 +267,28 @@ class Character(pygame.sprite.Sprite):
         else:
             if button == 'RIGHT':
                 del self.keysDown[self.keysDown.index('TOWARD')]
-                self.curAnimation = self.neutralAnimation
+                self.curAnimation = self.standingAnimation
             if button == 'LEFT':
                 del self.keysDown[self.keysDown.index('BACK')]
             if button == 'DOWN':
                 del self.keysDown[self.keysDown.index('DOWN')]
                 if 'TOWARD' in self.keysDown:
                     self.inputChain.append('TOWARD')
-                self.curAnimation = self.neutralAnimation
+                self.curAnimation = self.standingAnimation
                 
 
     def interpretInputs(self, gameState):
         if len(self.inputChain):
             if self.inputChain[-1] == 'JAB':
-                self.state = 'attacking'
                 if ",".join(self.inputChain[-4:]) == 'DOWN,DOWNTOWARD,TOWARD,JAB':
                     print "hadoken"
                 else:
                     print self.inputChain[-4:]
-                    self.curMove = self.moveList.get(self.inputChain[-1])
+                    #self.curMove = self.standingMoveList.get(self.inputChain[-1])
+                    self.curMove = self.moveList[self.state].get(self.inputChain[-1])
                     self.curMove.initialize()
                 del self.inputChain[:]
+                self.state = 'attacking'
         if 'DOWN' in self.keysDown:
             self.velocity[0]= 0
         elif 'TOWARD' in self.keysDown:
@@ -297,6 +304,7 @@ class Character(pygame.sprite.Sprite):
             self.velocity[0] = 0
 
     def getHit(self, properties):
+        self.curMove = None
         self.curAnimation = self.hitAnimation
         self.curAnimationFrame = 0
         #Put in damage here
@@ -314,8 +322,8 @@ class Character(pygame.sprite.Sprite):
             returnVal, curHitBox = self.curMove.nextFrame()
             if self.curMove.done:
                 self.curMove = None
-                self.curAnimation = self.neutralAnimation
-                self.state = 'neutral'
+                self.curAnimation = self.standingAnimation
+                self.state = 'standing'
             curHitBox.adjustHitBox(self.curHurtBox.x + self.curHurtBox.w, self.curHurtBox.y)
             return pygame.transform.flip(returnVal, not self.facingRight, False), curHitBox
 
