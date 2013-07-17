@@ -147,23 +147,7 @@ class Character(pygame.sprite.Sprite):
                 tempAnimation = []
                 while i != '@\n':
                     if i == 'normalMove\n':
-                        moveName = sourceFile.readline()
-                        moveName = moveName[:-1]
-                        moveInput = sourceFile.readline()
-                        tempProperties = convertTextToCode(sourceFile.readline())
-                        properties = {'damage':tempProperties[0], 'hitstun':tempProperties[1],'knockback':tempProperties[2]}
-                        i = sourceFile.readline()
-                        # read in animation
-                        while i != '&\n':
-                            tempAnimation.append(convertTextToCode(i))
-                            i = sourceFile.readline()
-                        #read in hitboxes
-                        hitBoxCoords = []
-                        i = sourceFile.readline()
-                        while i != '&\n':
-                            hitBoxCoords.append(convertTextToCode(i))
-                            i = sourceFile.readline()
-                        self.standingMoveList[moveName] = Move(moveName, moveInput, load_animation('RyuSFA3.png', tempAnimation), hitBoxCoords, properties)
+                        self.loadNormalMove(sourceFile,self.standingMoveList)
                     i = sourceFile.readline()
                 self.moveList['standing'] = self.standingMoveList
             if i == 'standingBlock\n':
@@ -185,6 +169,27 @@ class Character(pygame.sprite.Sprite):
         self.curAnimation = self.standingAnimation
         self.inputChain = [] # Keeps track of inputs for interpretting
         self.blockImage = None
+
+    def loadNormalMove(self,sourceFile,moveList):
+        tempAnimation = []
+        moveName = sourceFile.readline()
+        moveName = moveName[:-1]
+        moveInput = sourceFile.readline()
+        tempProperties = convertTextToCode(sourceFile.readline())
+        properties = {'damage':tempProperties[0], 'hitstun':tempProperties[1],'knockback':tempProperties[2]}
+        i = sourceFile.readline()
+        # read in animation
+        while i != '&\n':
+            tempAnimation.append(convertTextToCode(i))
+            i = sourceFile.readline()
+        #read in hitboxes
+        hitBoxCoords = []
+        i = sourceFile.readline()
+        while i != '&\n':
+            hitBoxCoords.append(convertTextToCode(i))
+            i = sourceFile.readline()
+        moveList[moveName] = Move(moveName, moveInput, load_animation('RyuSFA3.png', tempAnimation), hitBoxCoords, properties)
+        
 
     def update(self, gameState):
         if self.hitStun:
@@ -284,7 +289,6 @@ class Character(pygame.sprite.Sprite):
                     print "hadoken"
                 else:
                     print self.inputChain[-4:]
-                    #self.curMove = self.standingMoveList.get(self.inputChain[-1])
                     self.curMove = self.moveList[self.state].get(self.inputChain[-1])
                     self.curMove.initialize()
                 del self.inputChain[:]
