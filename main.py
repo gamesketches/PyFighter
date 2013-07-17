@@ -130,6 +130,7 @@ class Character(pygame.sprite.Sprite):
         self.inputs = inputs
         sourceFile = open('datafile.txt')
         self.standingMoveList = {}
+        self.crouchingMoveList = {}
         self.moveList= {}
         #Read all the data from the file
         while True:
@@ -160,6 +161,13 @@ class Character(pygame.sprite.Sprite):
                 self.walkforwardAnimation = load_animation('RyuSFA3.png', tempAnimation)            
             if i == 'crouch\n':
                 self.crouchAnimation = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
+                i = sourceFile.readline()
+                tempAnimation = []
+                while i != '@\n':
+                    if i == 'normalMove\n':
+                        self.loadNormalMove(sourceFile,self.crouchingMoveList)
+                    i = sourceFile.readline()
+                self.moveList['crouching'] = self.crouchingMoveList
             if i == 'hit\n':
                 i = sourceFile.readline()
                 while i != '&\n':
@@ -259,6 +267,7 @@ class Character(pygame.sprite.Sprite):
                 else:
                     self.keysDown.append('DOWN')
                     self.curAnimation = self.crouchAnimation
+                    self.state = 'crouching'
                     self.curAnimationFrame = 0
                     self.inputChain.append('DOWN')
             if button == 'JAB':
