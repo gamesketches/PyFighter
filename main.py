@@ -88,11 +88,12 @@ class HitBox(pygame.Rect):
         self.y = tempRect.y
 
 class Move():
-    def __init__(self, moveName, inputs, animation, hitboxes, properties):
+    def __init__(self, moveName, inputs, animation, hitboxes, properties, state):
         self.name = moveName
         self.inputs = inputs
         self.animation = animation
         self.hitboxes = []
+        self.state = state
         for i in hitboxes:
             #self.hitboxes.append(Rect(i))
             self.hitboxes.append(HitBox(i,properties))
@@ -148,7 +149,7 @@ class Character(pygame.sprite.Sprite):
                 tempAnimation = []
                 while i != '@\n':
                     if i == 'normalMove\n':
-                        self.loadNormalMove(sourceFile,self.standingMoveList)
+                        self.loadNormalMove(sourceFile,self.standingMoveList, 'standing')
                     i = sourceFile.readline()
                 self.moveList['standing'] = self.standingMoveList
             if i == 'standingBlock\n':
@@ -165,8 +166,10 @@ class Character(pygame.sprite.Sprite):
                 tempAnimation = []
                 while i != '@\n':
                     if i == 'normalMove\n':
-                        self.loadNormalMove(sourceFile,self.crouchingMoveList)
+                        self.loadNormalMove(sourceFile,self.crouchingMoveList, 'crouching')
                     i = sourceFile.readline()
+                #for i in self.crouchingMoveList.items():
+                #    self.crouchingMoveList[i].state = 'crouching'
                 self.moveList['crouching'] = self.crouchingMoveList
             if i == 'hit\n':
                 i = sourceFile.readline()
@@ -178,7 +181,7 @@ class Character(pygame.sprite.Sprite):
         self.inputChain = [] # Keeps track of inputs for interpretting
         self.blockImage = None
 
-    def loadNormalMove(self,sourceFile,moveList):
+    def loadNormalMove(self,sourceFile,moveList, state):
         tempAnimation = []
         moveName = sourceFile.readline()
         moveName = moveName[:-1]
@@ -196,7 +199,7 @@ class Character(pygame.sprite.Sprite):
         while i != '&\n':
             hitBoxCoords.append(convertTextToCode(i))
             i = sourceFile.readline()
-        moveList[moveName] = Move(moveName, moveInput, load_animation('RyuSFA3.png', tempAnimation), hitBoxCoords, properties)
+        moveList[moveName] = Move(moveName, moveInput, load_animation('RyuSFA3.png', tempAnimation), hitBoxCoords, properties, state)
         
 
     def update(self, gameState):
@@ -349,9 +352,12 @@ class Character(pygame.sprite.Sprite):
         else:
             returnVal, curHitBox = self.curMove.nextFrame()
             if self.curMove.done:
+                self.state = self.curMove.state
                 self.curMove = None
-                self.curAnimation = self.standingAnimation
-                self.state = 'standing'
+                if self.state == 'standing':
+                    self.curAnimation = self.standingAnimation
+                else:
+                    self.curAnimation = self.crouchAnimation
             curHitBox.adjustHitBox(self.curHurtBox.x + self.curHurtBox.w, self.curHurtBox.y)
             return pygame.transform.flip(returnVal, not self.facingRight, False), curHitBox
 
