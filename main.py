@@ -28,7 +28,7 @@ def load_image(name, colorkey=None):
     return image, image.get_rect()
 
 def load_animation(filename, coords, colorkey=None):
-    master_image, master_rect = load_image(filename)
+    master_image, master_rect = load_image(filename, -1)
     theAnimation = []
     for i in coords:
         theAnimation.append(master_image.subsurface(i))
@@ -234,10 +234,14 @@ class Character(pygame.sprite.Sprite):
                     self.state = 'standing'
             #If you are just walking
             if self.state == 'standing':
+                self.curHurtBox.y = 300 - self.curAnimation[self.curAnimationFrame].get_height()
                 self.curHurtBox.x += self.velocity[0]
                 self.curAnimationFrame += 1
                 if self.curAnimationFrame >= len(self.curAnimation): #Will need some more complicated parsing for state here later
                     self.curAnimationFrame = 0
+            elif self.state == 'crouching':
+                #self.curHurtBox.y = 300 - self.curHurtBox.h
+                print self.curHurtBox.bottom
 
     def keyPressed(self, state, pressedButton):
         # If Keys pushed down
@@ -277,6 +281,7 @@ class Character(pygame.sprite.Sprite):
                     self.curAnimation = self.crouchAnimation
                     self.state = 'crouching'
                     self.curAnimationFrame = 0
+                    self.curHurtBox.y = 300 - self.crouchAnimation[0].get_height()
                     self.inputChain.append('DOWN')
             if button == 'JAB':
                 self.inputChain.append('JAB')
