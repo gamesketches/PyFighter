@@ -218,15 +218,23 @@ class Character(pygame.sprite.Sprite):
             # If opponent is attacking and you're holding back
             elif self.state == 'blocking':
                 self.curAnimation = self.blockAnimation
-            #If you are just walking
-            if self.curMove is None and self.hitStun == 0:
+            # Pre-jump, transition to jumping frames
+            if self.state == 'prejump':
+                if self.curAnimationFrame >= 3:
+                    self.grounded = False
+                    self.state = 'jumping'
+                self.curAnimationFrame += 1
+            if self.state == 'jumping':
+                self.curHurtBox.y += self.velocity[1]
                 self.curHurtBox.x += self.velocity[0]
-                if not self.grounded:
-                    self.curHurtBox.y += self.velocity[1]
-                    self.velocity[1] += 1
-                    if self.curHurtBox.bottom >= 300:
-                        self.curHurtBox.bottom = 300
-                        self.grounded = True
+                self.velocity[1] += 1
+                if self.curHurtBox.bottom >= 300:
+                    self.curHurtBox.bottom = 300
+                    self.grounded = True
+                    self.state = 'standing'
+            #If you are just walking
+            if self.state == 'standing':
+                self.curHurtBox.x += self.velocity[0]
                 self.curAnimationFrame += 1
                 if self.curAnimationFrame >= len(self.curAnimation): #Will need some more complicated parsing for state here later
                     self.curAnimationFrame = 0
@@ -275,8 +283,9 @@ class Character(pygame.sprite.Sprite):
             if button == K_s:
                 self.curAnimation = self.blockAnimation
             if button == 'UP':
+                self.state = 'prejump'
+                self.curAnimationFrame = 0
                 self.velocity[1] = -11
-                self.grounded = False
         # On button release
         else:
             if button == 'RIGHT':
@@ -286,6 +295,7 @@ class Character(pygame.sprite.Sprite):
                 del self.keysDown[self.keysDown.index('BACK')]
             if button == 'DOWN':
                 del self.keysDown[self.keysDown.index('DOWN')]
+                self.state = 'standing'
                 if 'TOWARD' in self.keysDown:
                     self.inputChain.append('TOWARD')
                 self.curAnimation = self.standingAnimation
@@ -313,7 +323,7 @@ class Character(pygame.sprite.Sprite):
             elif self.facingRight: self.velocity[0] = -10
             else: self.velocity[0] = 10
             
-        else:
+        elif self.state != 'prejump' and self.state != 'jumping':
             self.velocity[0] = 0
 
     def getHit(self, properties):
