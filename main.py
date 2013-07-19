@@ -222,6 +222,7 @@ class Character(pygame.sprite.Sprite):
             # If opponent is attacking and you're holding back
             elif self.state == 'blocking':
                 self.curAnimation = self.blockAnimation
+                self.curAnimationFrame = 0
             # Pre-jump, transition to jumping frames
             if self.state == 'prejump':
                 if self.curAnimationFrame >= 3:
@@ -336,16 +337,22 @@ class Character(pygame.sprite.Sprite):
             self.velocity[0] = 0
 
     def getHit(self, properties):
-        self.curMove = None
-        self.curAnimation = self.hitAnimation
-        self.curAnimationFrame = 0
-        #Put in damage here
-        self.hitStun = properties[1]
-        if self.facingRight:
-            self.velocity[0] = properties[2] * -1
+        if self.state == 'blocking':
+            if self.facingRight:
+                self.velocity[0] = properties[2] * - 0.2
+            else:
+                self.velocity[0] = properties[2] * 0.2
         else:
-            self.velocity[0] = properties[2]
-        self.state = 'hit'
+            self.curMove = None
+            self.curAnimation = self.hitAnimation
+            self.curAnimationFrame = 0
+            #Put in damage here
+            self.hitStun = properties[1]
+            if self.facingRight:
+                self.velocity[0] = properties[2] * -1
+            else:
+                self.velocity[0] = properties[2]
+            self.state = 'hit'
 
     def currentFrame(self):
         if self.curMove is None:
@@ -365,7 +372,7 @@ class CombatManager():
     def __init__(self):
         player1InputKeys = {K_a: 'JAB', K_UP: 'UP', K_RIGHT: 'RIGHT', K_DOWN: 'DOWN', \
                             K_LEFT: 'LEFT'}
-        player2InputKeys = {K_u: 'JAB'}
+        player2InputKeys = {K_u: 'JAB', K_i: 'RIGHT'}
         self.player1 = Character(300,200, player1InputKeys, True)
         self.player2 = Character (600,200, player2InputKeys, False)
         self.player1HitBox = HitBox()
