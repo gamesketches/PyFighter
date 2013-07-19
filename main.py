@@ -130,8 +130,8 @@ class Character(pygame.sprite.Sprite):
         self.facingRight = facingRight
         self.inputs = inputs
         sourceFile = open('datafile.txt')
-        self.standingMoveList = {}
-        self.crouchingMoveList = {}
+        #self.standingMoveList = {}
+        #self.crouchingMoveList = {}
         self.moveList= {}
         #Read all the data from the file
         while True:
@@ -147,11 +147,14 @@ class Character(pygame.sprite.Sprite):
                 self.standingAnimation = load_animation('RyuSFA3.png', tempAnimation)
                 i = sourceFile.readline()
                 tempAnimation = []
+                tempMoveList = {}
                 while i != '@\n':
                     if i == 'normalMove\n':
-                        self.loadNormalMove(sourceFile,self.standingMoveList, 'standing')
+                        #self.loadNormalMove(sourceFile,self.standingMoveList, 'standing')
+                        self.loadNormalMove(sourceFile,tempMoveList,'standing')
                     i = sourceFile.readline()
-                self.moveList['standing'] = self.standingMoveList
+                #self.moveList['standing'] = self.standingMoveList
+                self.moveList['standing'] = tempMoveList
             if i == 'standingBlock\n':
                     self.blockAnimation = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
             if i == 'walkingForward\n':
@@ -164,13 +167,16 @@ class Character(pygame.sprite.Sprite):
                 self.crouchAnimation = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
                 i = sourceFile.readline()
                 tempAnimation = []
+                tempMoveList = {}
                 while i != '@\n':
                     if i == 'normalMove\n':
-                        self.loadNormalMove(sourceFile,self.crouchingMoveList, 'crouching')
+                        #self.loadNormalMove(sourceFile,self.crouchingMoveList, 'crouching')
+                        self.loadNormalMove(sourceFile,tempMoveList,'crouching')
                     i = sourceFile.readline()
                 #for i in self.crouchingMoveList.items():
                 #    self.crouchingMoveList[i].state = 'crouching'
-                self.moveList['crouching'] = self.crouchingMoveList
+                #self.moveList['crouching'] = self.crouchingMoveList
+                self.moveList['crouching'] = tempMoveList
             if i == 'hit\n':
                 i = sourceFile.readline()
                 while i != '&\n':
