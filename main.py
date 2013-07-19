@@ -71,15 +71,16 @@ def convertTextToCode(line):
     return tuple(nums)
 
 class HitBox(pygame.Rect):
-    def __init__(self, dimensions=(-1000,0,0,0), properties={'damage':0,'hitstun':0,'knockback':0}):
+    def __init__(self, dimensions=(-1000,0,0,0), properties={'damage':0,'hitstun':0,'knockback':0,'blocktype':'mid'}):
         pygame.Rect.__init__(self,dimensions)
         #Fill this out depending on your game
         self.damage = properties['damage']
         self.hitStun = properties['hitstun']
         self.knockBack = properties['knockback']
+        self.blockType = properties['blocktype']
 
     def getProperties(self):
-        return (self.damage, self.hitStun, self.knockBack)
+        return (self.damage, self.hitStun, self.knockBack, self.blockType)
 
     def adjustHitBox(self, x, y):
         # Shenanigans because pygame.Rect.move returns a rect :\
@@ -188,7 +189,7 @@ class Character(pygame.sprite.Sprite):
         moveName = moveName[:-1]
         moveInput = sourceFile.readline()
         tempProperties = convertTextToCode(sourceFile.readline())
-        properties = {'damage':tempProperties[0], 'hitstun':tempProperties[1],'knockback':tempProperties[2]}
+        properties = {'damage':tempProperties[0], 'hitstun':tempProperties[1],'knockback':tempProperties[2], 'blocktype': 'mid'}
         i = sourceFile.readline()
         # read in animation
         while i != '&\n':
