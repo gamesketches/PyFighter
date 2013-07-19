@@ -123,6 +123,7 @@ class Character(pygame.sprite.Sprite):
         self.hitStun = 0
         self.curAnimation = []
         self.state = 'standing'
+        self.neutralAnimations = {}
         self.curAnimationFrame = 0
         self.curMove = None
         self.keysDown = []
@@ -130,8 +131,6 @@ class Character(pygame.sprite.Sprite):
         self.facingRight = facingRight
         self.inputs = inputs
         sourceFile = open('datafile.txt')
-        #self.standingMoveList = {}
-        #self.crouchingMoveList = {}
         self.moveList= {}
         #Read all the data from the file
         while True:
@@ -144,16 +143,14 @@ class Character(pygame.sprite.Sprite):
                 while i != '&\n':
                     tempAnimation.append(convertTextToCode(i))
                     i = sourceFile.readline()
-                self.standingAnimation = load_animation('RyuSFA3.png', tempAnimation)
+                self.neutralAnimations['standing'] = load_animation('RyuSFA3.png', tempAnimation)
                 i = sourceFile.readline()
                 tempAnimation = []
                 tempMoveList = {}
                 while i != '@\n':
                     if i == 'normalMove\n':
-                        #self.loadNormalMove(sourceFile,self.standingMoveList, 'standing')
                         self.loadNormalMove(sourceFile,tempMoveList,'standing')
                     i = sourceFile.readline()
-                #self.moveList['standing'] = self.standingMoveList
                 self.moveList['standing'] = tempMoveList
             if i == 'standingBlock\n':
                     self.blockAnimation = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
@@ -164,18 +161,16 @@ class Character(pygame.sprite.Sprite):
                     i = sourceFile.readline()
                 self.walkforwardAnimation = load_animation('RyuSFA3.png', tempAnimation)            
             if i == 'crouch\n':
-                self.crouchAnimation = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
+                self.neutralAnimations['crouching'] = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
                 i = sourceFile.readline()
                 tempAnimation = []
                 tempMoveList = {}
                 while i != '@\n':
                     if i == 'normalMove\n':
-                        #self.loadNormalMove(sourceFile,self.crouchingMoveList, 'crouching')
                         self.loadNormalMove(sourceFile,tempMoveList,'crouching')
                     i = sourceFile.readline()
                 #for i in self.crouchingMoveList.items():
                 #    self.crouchingMoveList[i].state = 'crouching'
-                #self.moveList['crouching'] = self.crouchingMoveList
                 self.moveList['crouching'] = tempMoveList
             if i == 'hit\n':
                 i = sourceFile.readline()
@@ -183,7 +178,7 @@ class Character(pygame.sprite.Sprite):
                     tempAnimation.append(convertTextToCode(i))
                     i = sourceFile.readline()
                 self.hitAnimation = load_animation('RyuSFA3.png', tempAnimation)
-        self.curAnimation = self.standingAnimation
+        self.curAnimation = self.neutralAnimations['standing']
         self.inputChain = [] # Keeps track of inputs for interpretting
         self.blockImage = None
 
@@ -215,14 +210,14 @@ class Character(pygame.sprite.Sprite):
             self.velocity[0] = towardsZero(self.velocity[0], 1)
             if self.hitStun <= 0:
                 self.state = 'standing'
-                self.curAnimation = self.standingAnimation
+                self.curAnimation = self.neutralAnimations[self.state]
                 self.curAnimationFrame = 0
         else:
             self.interpretInputs(gameState)
             #If opponent is not attacking, return to neutral
             if self.state == 'blocking' and gameState != 'attacking':
                 self.state = 'standing'
-                self.curAnimation = self.standingAnimation
+                self.curAnimation = self.neutralAnimations[self.state]
                 self.curAnimationFrame = 0
             # If opponent is attacking and you're holding back
             elif self.state == 'blocking':
@@ -243,7 +238,7 @@ class Character(pygame.sprite.Sprite):
                     self.state = 'standing'
             #If you are just walking
             if self.state == 'standing':
-                self.curHurtBox.y = 300 - self.curAnimation[self.curAnimationFrame].get_height()
+                self.curHurtBox.y = 300 - self.curAnimation[0].get_height()
                 self.curHurtBox.x += self.velocity[0]
                 self.curAnimationFrame += 1
                 if self.curAnimationFrame >= len(self.curAnimation): #Will need some more complicated parsing for state here later
@@ -287,10 +282,10 @@ class Character(pygame.sprite.Sprite):
                     self.keysDown.append('DOWN')
                 else:
                     self.keysDown.append('DOWN')
-                    self.curAnimation = self.crouchAnimation
                     self.state = 'crouching'
+                    self.curAnimation = self.neutralAnimations['crouching']
                     self.curAnimationFrame = 0
-                    self.curHurtBox.y = 300 - self.crouchAnimation[0].get_height()
+                    self.curHurtBox.y = 300 - self.neutralAnimations['crouching'][0].get_height()
                     self.inputChain.append('DOWN')
             if button == 'JAB':
                 self.inputChain.append('JAB')
@@ -304,7 +299,7 @@ class Character(pygame.sprite.Sprite):
         else:
             if button == 'RIGHT':
                 del self.keysDown[self.keysDown.index('TOWARD')]
-                self.curAnimation = self.standingAnimation
+                self.curAnimation = self.neutralAnimations['standing']
             if button == 'LEFT':
                 del self.keysDown[self.keysDown.index('BACK')]
             if button == 'DOWN':
@@ -312,7 +307,7 @@ class Character(pygame.sprite.Sprite):
                 self.state = 'standing'
                 if 'TOWARD' in self.keysDown:
                     self.inputChain.append('TOWARD')
-                self.curAnimation = self.standingAnimation
+                self.curAnimation = self.neutralAnimations['standing']
                 
 
     def interpretInputs(self, gameState):
@@ -360,10 +355,8 @@ class Character(pygame.sprite.Sprite):
             if self.curMove.done:
                 self.state = self.curMove.state
                 self.curMove = None
-                if self.state == 'standing':
-                    self.curAnimation = self.standingAnimation
-                else:
-                    self.curAnimation = self.crouchAnimation
+                self.curAnimation = self.neutralAnimations[self.state]
+                self.curAnimationFrame = 0
             curHitBox.adjustHitBox(self.curHurtBox.x + self.curHurtBox.w, self.curHurtBox.y)
             return pygame.transform.flip(returnVal, not self.facingRight, False), curHitBox
 
