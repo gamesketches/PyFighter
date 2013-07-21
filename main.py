@@ -221,8 +221,12 @@ class Character(pygame.sprite.Sprite):
         else:
             self.interpretInputs(gameState)
             #If opponent is not attacking, return to neutral
-            if self.state == 'blocking' and gameState != 'attacking':
+            if self.state == 'standBlocking' and gameState != 'attacking':
                 self.state = 'standing'
+                self.curAnimation = self.neutralAnimations[self.state]
+                self.curAnimationFrame = 0
+            elif self.state == 'crouchBlocking' and gameState != 'attacking':
+                self.state = 'crouching'
                 self.curAnimation = self.neutralAnimations[self.state]
                 self.curAnimationFrame = 0
             # If opponent is attacking and you're holding back
@@ -357,23 +361,28 @@ class Character(pygame.sprite.Sprite):
             if gameState is 'attacking':
                 if 'DOWN' in self.keysDown:
                     self.curAnimation = self.blockAnimations['crouching']
+                    self.state = 'crouchBlocking'
+                    self.curAnimationFrame = 0
                 else:
                     self.curAnimation = self.blockAnimations['standing']
-                self.state = 'blocking'
+                    self.state = 'standBlocking'
+                    self.curAnimationFrame = 0
             elif self.facingRight: self.velocity[0] = -10
             else: self.velocity[0] = 10
-        if 'DOWN' in self.keysDown:
-            self.velocity[0]= 0
+        elif 'DOWN' in self.keysDown:
+            self.velocity[0] = 0
             
         elif self.state != 'prejump' and self.state != 'jumping':
             self.velocity[0] = 0
 
     def getHit(self, properties):
-        if self.state == 'blocking':
+        if self.state == 'standBlocking':
             if self.facingRight:
                 self.velocity[0] = properties[2] * - 0.2
             else:
                 self.velocity[0] = properties[2] * 0.2
+        elif self.state == 'crouchBlocking':
+            print "blocking Low"
         else:
             self.curMove = None
             self.curAnimation = self.hitAnimation
