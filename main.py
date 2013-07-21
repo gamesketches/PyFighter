@@ -125,6 +125,7 @@ class Character(pygame.sprite.Sprite):
         self.curAnimation = []
         self.state = 'standing'
         self.neutralAnimations = {}
+        self.blockAnimations = {}
         self.curAnimationFrame = 0
         self.curMove = None
         self.keysDown = []
@@ -151,10 +152,12 @@ class Character(pygame.sprite.Sprite):
                 while i != '@\n':
                     if i == 'normalMove\n':
                         self.loadNormalMove(sourceFile,tempMoveList,'standing')
+                    if i == 'block\n':
+                        self.blockAnimations['standing'] = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
                     i = sourceFile.readline()
                 self.moveList['standing'] = tempMoveList
-            if i == 'standingBlock\n':
-                    self.blockAnimation = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
+            #if i == 'standingBlock\n':
+                    #self.blockAnimation = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
             if i == 'walkingForward\n':
                 i = sourceFile.readline()
                 while i != '&\n':
@@ -169,9 +172,11 @@ class Character(pygame.sprite.Sprite):
                 while i != '@\n':
                     if i == 'normalMove\n':
                         self.loadNormalMove(sourceFile,tempMoveList,'crouching')
+                    if i == 'block\n':
+                        self.blockAnimations['crouching'] = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
+                    #for i in self.crouchingMoveList.items():
+                    #    self.crouchingMoveList[i].state = 'crouching'
                     i = sourceFile.readline()
-                #for i in self.crouchingMoveList.items():
-                #    self.crouchingMoveList[i].state = 'crouching'
                 self.moveList['crouching'] = tempMoveList
             if i == 'hit\n':
                 i = sourceFile.readline()
@@ -222,7 +227,7 @@ class Character(pygame.sprite.Sprite):
                 self.curAnimationFrame = 0
             # If opponent is attacking and you're holding back
             elif self.state == 'blocking':
-                self.curAnimation = self.blockAnimation
+                self.curAnimation = self.blockAnimations['standing']#self.blockAnimation
                 self.curAnimationFrame = 0
             # Pre-jump, transition to jumping frames
             if self.state == 'prejump':
@@ -247,7 +252,7 @@ class Character(pygame.sprite.Sprite):
                     self.curAnimationFrame = 0
             elif self.state == 'crouching':
                 #self.curHurtBox.y = 300 - self.curHurtBox.h
-                print self.curHurtBox.bottom
+                print ""
 
     def keyPressed(self, state, pressedButton):
         # If Keys pushed down
@@ -277,10 +282,32 @@ class Character(pygame.sprite.Sprite):
                         #self.curAnimationFrame = 0
                         self.inputChain.append('BACK')
             if button == 'LEFT':
-                self.keysDown.append('BACK')
+                if self.facingRight:
+                    if 'DOWN' in self.keysDown:
+                        self.inputChain.append('DOWNBACK')
+                        print "Downback"
+                        self.keysDown.append('BACK')
+                    else:
+                        self.keysDown.append('BACK')
+                        #put walkbackwards animation in here
+                        #self.curAnimation = self.walkBackwardAnimation
+                        #self.curAnimationFrame = 0
+                        self.inputChain.append('BACK')
+                else:
+                    if 'DOWN' in self.keysDown:
+                        self.inputChain.append('DOWNTOWARD')
+                        self.keysDown.append('TOWARD')
+                    else:
+                        self.keysDown.append('TOWARD')
+                        self.curAnimation = self.walkforwardAnimation
+                        self.curAnimationFrame = 0
+                        self.inputChain.append('TOWARD')
             if button == 'DOWN':
                 if 'TOWARD' in self.keysDown:
                     self.inputChain.append('DOWNTOWARD')
+                    self.keysDown.append('DOWN')
+                elif 'BACK' in self.keysDown:
+                    self.inputChain.append('DOWNBACK')
                     self.keysDown.append('DOWN')
                 else:
                     self.keysDown.append('DOWN')
@@ -292,7 +319,7 @@ class Character(pygame.sprite.Sprite):
             if button == 'JAB':
                 self.inputChain.append('JAB')
             if button == K_s:
-                self.curAnimation = self.blockAnimation
+                self.curAnimation = self.blockAnimations['standing']#blockAnimation
             if button == 'UP':
                 self.state = 'prejump'
                 self.curAnimationFrame = 0
@@ -323,16 +350,20 @@ class Character(pygame.sprite.Sprite):
                     self.curMove.initialize()
                 del self.inputChain[:]
                 self.state = 'attacking'
-        if 'DOWN' in self.keysDown:
-            self.velocity[0]= 0
-        elif 'TOWARD' in self.keysDown:
+        if 'TOWARD' in self.keysDown:
             if self.facingRight: self.velocity[0] = 10
             else: self.velocity[0] = -10
         elif 'BACK' in self.keysDown:
             if gameState is 'attacking':
+                if 'DOWN' in self.keysDown:
+                    self.curAnimation = self.blockAnimations['crouching']
+                else:
+                    self.curAnimation = self.blockAnimations['standing']
                 self.state = 'blocking'
             elif self.facingRight: self.velocity[0] = -10
             else: self.velocity[0] = 10
+        if 'DOWN' in self.keysDown:
+            self.velocity[0]= 0
             
         elif self.state != 'prejump' and self.state != 'jumping':
             self.velocity[0] = 0
