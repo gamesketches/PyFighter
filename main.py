@@ -96,7 +96,6 @@ class Move():
         self.hitboxes = []
         self.state = state
         for i in hitboxes:
-            #self.hitboxes.append(Rect(i))
             self.hitboxes.append(HitBox(i,properties))
         self.animationFrame = 0
         self.done = False
@@ -156,8 +155,6 @@ class Character(pygame.sprite.Sprite):
                         self.blockAnimations['standing'] = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
                     i = sourceFile.readline()
                 self.moveList['standing'] = tempMoveList
-            #if i == 'standingBlock\n':
-                    #self.blockAnimation = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
             if i == 'walkingForward\n':
                 i = sourceFile.readline()
                 while i != '&\n':
@@ -194,7 +191,8 @@ class Character(pygame.sprite.Sprite):
         moveName = moveName[:-1]
         moveInput = sourceFile.readline()
         tempProperties = convertTextToCode(sourceFile.readline())
-        properties = {'damage':tempProperties[0], 'hitstun':tempProperties[1],'knockback':tempProperties[2], 'blocktype': 'mid'}
+        blockType = sourceFile.readline()[:-1]
+        properties = {'damage':tempProperties[0], 'hitstun':tempProperties[1],'knockback':tempProperties[2], 'blocktype': blockType}#'mid'}
         i = sourceFile.readline()
         # read in animation
         while i != '&\n':
@@ -231,7 +229,7 @@ class Character(pygame.sprite.Sprite):
                 self.curAnimationFrame = 0
             # If opponent is attacking and you're holding back
             elif self.state == 'blocking':
-                self.curAnimation = self.blockAnimations['standing']#self.blockAnimation
+                self.curAnimation = self.blockAnimations['standing']
                 self.curAnimationFrame = 0
             # Pre-jump, transition to jumping frames
             if self.state == 'prejump':
@@ -254,9 +252,9 @@ class Character(pygame.sprite.Sprite):
                 self.curAnimationFrame += 1
                 if self.curAnimationFrame >= len(self.curAnimation): #Will need some more complicated parsing for state here later
                     self.curAnimationFrame = 0
-            elif self.state == 'crouching':
+            #elif self.state == 'crouching':
                 #self.curHurtBox.y = 300 - self.curHurtBox.h
-                print ""
+                #print ""
 
     def keyPressed(self, state, pressedButton):
         # If Keys pushed down
@@ -323,7 +321,7 @@ class Character(pygame.sprite.Sprite):
             if button == 'JAB':
                 self.inputChain.append('JAB')
             if button == K_s:
-                self.curAnimation = self.blockAnimations['standing']#blockAnimation
+                self.curAnimation = self.blockAnimations['standing']
             if button == 'UP':
                 self.state = 'prejump'
                 self.curAnimationFrame = 0
@@ -375,25 +373,35 @@ class Character(pygame.sprite.Sprite):
         elif self.state != 'prejump' and self.state != 'jumping':
             self.velocity[0] = 0
 
-    def getHit(self, properties):
+    def checkHit(self, properties):
         if self.state == 'standBlocking':
-            if self.facingRight:
-                self.velocity[0] = properties[2] * - 0.2
+            if properties[3] == 'mid' or properties[3] == 'high':
+                if self.facingRight:
+                    self.velocity[0] = properties[2] * - 0.2
+                else:
+                    self.velocity[0] = properties[2] * 0.2
             else:
-                self.velocity[0] = properties[2] * 0.2
+                self.getHit(properties)
         elif self.state == 'crouchBlocking':
-            print "blocking Low"
+            if properties.blockType == 'mid' or properties.blockType == 'low':
+                if self.facingRight:
+                    self.velocity[0] = properties[2] * - 0.2
+                else:
+                    self.velocity[0] = properties[2] * 0.2
         else:
-            self.curMove = None
-            self.curAnimation = self.hitAnimation
-            self.curAnimationFrame = 0
-            #Put in damage here
-            self.hitStun = properties[1]
-            if self.facingRight:
-                self.velocity[0] = properties[2] * -1
-            else:
-                self.velocity[0] = properties[2]
-            self.state = 'hit'
+            self.getHit(properties)
+            
+    def getHit(self, properties):
+        self.curMove = None
+        self.curAnimation = self.hitAnimation
+        self.curAnimationFrame = 0
+        #Put in damage here
+        self.hitStun = properties[1]
+        if self.facingRight:
+            self.velocity[0] = properties[2] * -1
+        else:
+            self.velocity[0] = properties[2]
+        self.state = 'hit'
 
     def currentFrame(self):
         if self.curMove is None:
@@ -431,9 +439,9 @@ class CombatManager():
 
     def checkCollisions(self):
         if self.player2.curHurtBox.colliderect(self.player1HitBox):
-            self.player2.getHit(self.player1HitBox.getProperties())
+            self.player2.checkHit(self.player1HitBox.getProperties())
         if self.player1.curHurtBox.colliderect(self.player2HitBox):
-            self.player1.getHit(self.player2HitBox.getProperties())
+            self.player1.checkHit(self.player2HitBox.getProperties())
 
     def updateCharacters(self):
         self.player1.update(self.player2.state)
