@@ -93,7 +93,7 @@ class HitBox(pygame.Rect):
 class Projectile(pygame.sprite.Sprite):
     def __init__(self, animation, hitBox, velocity, owner):
         self.animation = animation
-        self.hitBox = HitBox(hitBox)
+        self.hitBox = HitBox(hitBox, {'damage':0,'hitstun':10,'knockback':1,'blocktype':'mid'})
         self.velocity = velocity
         self.curAnimationFrame = 0
         self.image = self.animation[self.curAnimationFrame]
@@ -107,7 +107,10 @@ class Projectile(pygame.sprite.Sprite):
             self.curAnimationFrame = 0
 
     def calcNewPos(self):
-        self.hitBox.x += 1
+        self.hitBox.x += 10
+
+    def kill(self):
+        del self
         
 
 class Move():
@@ -469,6 +472,12 @@ class CombatManager():
             self.player2.checkHit(self.player1HitBox.getProperties())
         if self.player1.curHurtBox.colliderect(self.player2HitBox):
             self.player1.checkHit(self.player2HitBox.getProperties())
+        for i in projectiles:
+            if self.player2.curHurtBox.colliderect(i.hitBox):
+                self.player2.checkHit(i.hitBox.getProperties())
+                projectiles.remove(i)
+            if self.player1.curHurtBox.colliderect(i.hitBox):
+                self.player1.checkHit(i.hitBox.getProperties())
 
     def updateCharacters(self):
         self.player1.update(self.player2.state)
