@@ -369,6 +369,10 @@ class Character(pygame.sprite.Sprite):
                 if ",".join(self.inputChain[-4:]) == 'DOWN,DOWNTOWARD,TOWARD,JAB':
                     print "hadoken"
                     Projectile(load_animation('RyuSFA3.png', [(541,3109,73,38)]), HitBox((self.curHurtBox.x, self.curHurtBox.y, 73, 38)), 10, 'p1')
+                    # These two lines are just to stop Ryu from crashing.
+                    # #They should be removed once special moves are properly implemented
+                    self.curMove = self.moveList[self.state].get(self.inputChain[-1])
+                    self.curMove.initialize()
                 else:
                     print self.inputChain[-4:]
                     self.curMove = self.moveList[self.state].get(self.inputChain[-1])
