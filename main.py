@@ -73,16 +73,17 @@ def convertTextToCode(line):
     return tuple(nums)
 
 class HitBox(pygame.Rect):
-    def __init__(self, dimensions=(-1000,0,0,0), properties={'damage':0,'hitstun':0,'knockback':0,'blocktype':'mid'}):
+    def __init__(self, dimensions=(-1000,0,0,0), properties={'damage':0,'hitstun':0,'knockback':0, 'knockdown':False,'blocktype':'mid'}):
         pygame.Rect.__init__(self,dimensions)
         #Fill this out depending on your game
         self.damage = properties['damage']
         self.hitStun = properties['hitstun']
         self.knockBack = properties['knockback']
         self.blockType = properties['blocktype']
+        self.knockDown = properties['knockdown']
 
     def getProperties(self):
-        return (self.damage, self.hitStun, self.knockBack, self.blockType)
+        return (self.damage, self.hitStun, self.knockBack, self.knockDown, self.blockType)
 
     def adjustHitBox(self, x, y):
         # Shenanigans because pygame.Rect.move returns a rect :\
@@ -93,7 +94,7 @@ class HitBox(pygame.Rect):
 class Projectile(pygame.sprite.Sprite):
     def __init__(self, animation, hitBox, velocity, owner):
         self.animation = animation
-        self.hitBox = HitBox(hitBox, {'damage':0,'hitstun':10,'knockback':1,'blocktype':'mid'})
+        self.hitBox = HitBox(hitBox, {'damage':0,'hitstun':10,'knockback':1,'knockdown':False,'blocktype':'mid'})
         self.velocity = velocity
         self.curAnimationFrame = 0
         self.image = self.animation[self.curAnimationFrame]
@@ -217,7 +218,7 @@ class Character(pygame.sprite.Sprite):
         moveInput = sourceFile.readline()
         tempProperties = convertTextToCode(sourceFile.readline())
         blockType = sourceFile.readline()[:-1]
-        properties = {'damage':tempProperties[0], 'hitstun':tempProperties[1],'knockback':tempProperties[2], 'blocktype': blockType}
+        properties = {'damage':tempProperties[0], 'hitstun':tempProperties[1],'knockback':tempProperties[2], 'knockdown': tempProperties[3],'blocktype': blockType}
         i = sourceFile.readline()
         # read in animation
         while i != '&\n':
@@ -370,7 +371,6 @@ class Character(pygame.sprite.Sprite):
         if len(self.inputChain):
             if self.inputChain[-1] == 'JAB':
                 if ",".join(self.inputChain[-4:]) == 'DOWN,DOWNTOWARD,TOWARD,JAB':
-                    print "hadoken"
                     Projectile(load_animation('RyuSFA3.png', [(541,3109,73,38)]), HitBox((self.curHurtBox.x, self.curHurtBox.y, 73, 38)), 10, 'p1')
                     # These two lines are just to stop Ryu from crashing.
                     # #They should be removed once special moves are properly implemented
