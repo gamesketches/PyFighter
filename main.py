@@ -186,7 +186,13 @@ class Character(pygame.sprite.Sprite):
                 while i != '&\n':
                     tempAnimation.append(convertTextToCode(i))
                     i = sourceFile.readline()
-                self.walkforwardAnimation = load_animation('RyuSFA3.png', tempAnimation)            
+                self.walkforwardAnimation = load_animation('RyuSFA3.png', tempAnimation)
+            if i == 'knockDown\n':
+                i = sourceFile.readline()
+                while i != '&\n':
+                    tempAnimation.append(convertTextToCode(i))
+                    i = sourceFile.readline()
+                self.knockDownAnimation = load_animation('RyuSFA3.png', tempAnimation)
             if i == 'crouch\n':
                 self.neutralAnimations['crouching'] = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
                 i = sourceFile.readline()
@@ -234,7 +240,7 @@ class Character(pygame.sprite.Sprite):
         
 
     def update(self, gameState):
-        if self.hitStun:
+        if self.hitStun and self.state != 'knockedDown':
             self.hitStun -= 1
             self.curHurtBox.x += self.velocity[0]
             self.velocity[0] = towardsZero(self.velocity[0], 1)
@@ -242,6 +248,16 @@ class Character(pygame.sprite.Sprite):
                 self.state = 'standing'
                 self.curAnimation = self.neutralAnimations[self.state]
                 self.curAnimationFrame = 0
+        elif self.hitStun and self.state == 'knockedDown':
+            if self.curHurtBox.bottom >= 300:
+                self.curHurtBox.bottom = 300
+                self.hitStun -= 1
+                if hitStun <= 0:
+                    self.state = 'standing'
+                    self.curAnimation = self.neutralAnimations[self.state]
+                    self.curAnimationFrame = 0
+            else:
+                self.velocity[1] = 5
         else:
             self.interpretInputs(gameState)
             #If opponent is not attacking, return to neutral
@@ -423,15 +439,19 @@ class Character(pygame.sprite.Sprite):
             
     def getHit(self, properties):
         self.curMove = None
-        self.curAnimation = self.hitAnimation
-        self.curAnimationFrame = 0
-        #Put in damage here
-        self.hitStun = properties[1]
-        if self.facingRight:
-            self.velocity[0] = properties[2] * -1
+        if not properties[3]:    
+            self.curAnimation = self.hitAnimation
+            self.curAnimationFrame = 0
+            #Put in damage here
+            self.hitStun = properties[1]
+            if self.facingRight:
+                self.velocity[0] = properties[2] * -1
+            else:
+                self.velocity[0] = properties[2]
+            self.state = 'hit'
         else:
-            self.velocity[0] = properties[2]
-        self.state = 'hit'
+            self.curAnimation = self.knockDownAnimation
+            self.curAnimationFrame = 0
 
     def currentFrame(self):
         if self.curMove is None:
