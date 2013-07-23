@@ -7,6 +7,8 @@ if not pygame.mixer: print 'Warning, sound disabled'
 main_dir = os.path.split(os.path.abspath(sys.argv[0]))[0]
 data_dir = os.path.join(main_dir, 'data')
 
+projectiles = []
+
 #def enum(*sequential, **named):
 #    enums = dict(zip(sequential, range(len(sequential))), **named)
 #    return type('Enum', (), enums)
@@ -87,6 +89,26 @@ class HitBox(pygame.Rect):
         tempRect = self.move(x - self.x,y - self.y)
         self.x = tempRect.x
         self.y = tempRect.y
+
+class Projectile(pygame.sprite.Sprite):
+    def __init__(self, animation, hitBox, velocity, owner):
+        self.animation = animation
+        self.hitBox = HitBox(hitBox)
+        self.velocity = velocity
+        self.curAnimationFrame = 0
+        self.image = self.animation[self.curAnimationFrame]
+        projectiles.append(self)
+
+    def update(self):
+        self.calcNewPos()
+        self.image = self.animation[self.curAnimationFrame]
+        self.curAnimationFrame += 1
+        if self.curAnimationFrame >= len(self.animation):
+            self.curAnimationFrame = 0
+
+    def calcNewPos(self):
+        self.hitBox.x += 1
+        
 
 class Move():
     def __init__(self, moveName, inputs, animation, hitboxes, properties, state):
@@ -192,7 +214,7 @@ class Character(pygame.sprite.Sprite):
         moveInput = sourceFile.readline()
         tempProperties = convertTextToCode(sourceFile.readline())
         blockType = sourceFile.readline()[:-1]
-        properties = {'damage':tempProperties[0], 'hitstun':tempProperties[1],'knockback':tempProperties[2], 'blocktype': blockType}#'mid'}
+        properties = {'damage':tempProperties[0], 'hitstun':tempProperties[1],'knockback':tempProperties[2], 'blocktype': blockType}
         i = sourceFile.readline()
         # read in animation
         while i != '&\n':
@@ -346,6 +368,7 @@ class Character(pygame.sprite.Sprite):
             if self.inputChain[-1] == 'JAB':
                 if ",".join(self.inputChain[-4:]) == 'DOWN,DOWNTOWARD,TOWARD,JAB':
                     print "hadoken"
+                    Projectile(load_animation('RyuSFA3.png', [(541,3109,73,38)]), HitBox((self.curHurtBox.x, self.curHurtBox.y, 73, 38)), 10, 'p1')
                 else:
                     print self.inputChain[-4:]
                     self.curMove = self.moveList[self.state].get(self.inputChain[-1])
@@ -446,12 +469,16 @@ class CombatManager():
     def updateCharacters(self):
         self.player1.update(self.player2.state)
         self.player2.update(self.player1.state)
+        for i in projectiles:
+            i.update()
 
     def drawPlayers(self, screen):
         player1Frame, self.player1HitBox = self.player1.currentFrame()
         player2Frame, self.player2HitBox = self.player2.currentFrame()
         screen.blit(player1Frame, self.player1.curHurtBox.topleft)
         screen.blit(player2Frame, self.player2.curHurtBox.topleft)
+        for i in projectiles:
+            screen.blit(i.image, (i.hitBox.x, i.hitBox.y))
 
     def keyPressed(self, down, key):
         self.player1.keyPressed(down, key)
