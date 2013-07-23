@@ -251,13 +251,15 @@ class Character(pygame.sprite.Sprite):
         elif self.hitStun and self.state == 'knockedDown':
             if self.curHurtBox.bottom >= 300:
                 self.curHurtBox.bottom = 300
+                self.velocity[0] = 0
                 self.hitStun -= 1
-                if hitStun <= 0:
+                if self.hitStun <= 0:
                     self.state = 'standing'
                     self.curAnimation = self.neutralAnimations[self.state]
                     self.curAnimationFrame = 0
             else:
-                self.velocity[1] = 5
+                self.curHurtBox.y += 5
+                self.curHurtBox.x += self.velocity[0]
         else:
             self.interpretInputs(gameState)
             #If opponent is not attacking, return to neutral
@@ -444,14 +446,21 @@ class Character(pygame.sprite.Sprite):
             self.curAnimationFrame = 0
             #Put in damage here
             self.hitStun = properties[1]
-            if self.facingRight:
-                self.velocity[0] = properties[2] * -1
-            else:
-                self.velocity[0] = properties[2]
+            #if self.facingRight:
+            #    self.velocity[0] = properties[2] * -1
+            #else:
+            #    self.velocity[0] = properties[2]
             self.state = 'hit'
         else:
             self.curAnimation = self.knockDownAnimation
             self.curAnimationFrame = 0
+            self.curHurtBox.h = self.knockDownAnimation[0].get_height()
+            self.hitStun = 50
+            self.state = 'knockedDown'
+        if self.facingRight:
+            self.velocity[0] = properties[2] * -1
+        else:
+            self.velocity[0] = properties[2]
 
     def currentFrame(self):
         if self.curMove is None:
