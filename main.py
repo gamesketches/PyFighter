@@ -373,16 +373,34 @@ class Character(pygame.sprite.Sprite):
         # On button release
         else:
             if button == 'RIGHT':
-                del self.keysDown[self.keysDown.index('TOWARD')]
-                self.curAnimation = self.neutralAnimations['standing']
+                if self.facingRight:
+                    del self.keysDown[self.keysDown.index('TOWARD')]
+                    self.curAnimation = self.neutralAnimations['standing']
+                else:
+                    del self.keysDown[self.keysDown.index('BACK')]
+                    self.curAnimation = self.neutralAnimations['standing']
             if button == 'LEFT':
-                del self.keysDown[self.keysDown.index('BACK')]
+                if self.facingRight:
+                    del self.keysDown[self.keysDown.index('BACK')]
+                    self.curAnimation = self.neutralAnimations['standing']
+                else:
+                    del self.keysDown[self.keysDown.index('TOWARD')]
+                    self.curAnimation = self.neutralAnimations['standing']
             if button == 'DOWN':
                 del self.keysDown[self.keysDown.index('DOWN')]
                 self.state = 'standing'
                 if 'TOWARD' in self.keysDown:
                     self.inputChain.append('TOWARD')
                 self.curAnimation = self.neutralAnimations['standing']
+
+    def switchSides(self):
+        if 'TOWARD' in self.keysDown:
+            del self.keysDown[self.keysDown.index('TOWARD')]
+            self.keysDown.append('BACK')
+        if 'BACK' in self.keysDown:
+            del self.keysDown[self.keysDown.index('BACK')]
+            self.keysDown.append('TOWARD')
+        self.facingRight = not self.facingRight
                 
 
     def interpretInputs(self, gameState):
@@ -446,10 +464,6 @@ class Character(pygame.sprite.Sprite):
             self.curAnimationFrame = 0
             #Put in damage here
             self.hitStun = properties[1]
-            #if self.facingRight:
-            #    self.velocity[0] = properties[2] * -1
-            #else:
-            #    self.velocity[0] = properties[2]
             self.state = 'hit'
         else:
             self.curAnimation = self.knockDownAnimation
@@ -487,12 +501,12 @@ class CombatManager():
         self.player2HitBox = HitBox()
 
     def update(self):
-        if self.player1.curHurtBox.x >= self.player2.curHurtBox.x:
-            self.player1.facingRight = False
-            self.player2.facingRight = True
-        else:
-            self.player1.facingRight = True
-            self.player2.facingRight = False
+        if self.player1.curHurtBox.x >= self.player2.curHurtBox.x and self.player1.facingRight:
+            self.player1.switchSides()
+            self.player2.switchSides()
+        elif self.player1.curHurtBox.x < self.player2.curHurtBox.x and self.player2.facingRight:
+            self.player1.switchSides()
+            self.player2.switchSides()
         self.checkCollisions()
         self.updateCharacters()
 
