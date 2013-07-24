@@ -511,10 +511,17 @@ class CombatManager():
         self.updateCharacters()
 
     def checkCollisions(self):
+        # Handle attack collisions
         if self.player2.curHurtBox.colliderect(self.player1HitBox):
             self.player2.checkHit(self.player1HitBox.getProperties())
         if self.player1.curHurtBox.colliderect(self.player2HitBox):
             self.player1.checkHit(self.player2HitBox.getProperties())
+        # Handle players walking into each other
+        if self.player2.curHurtBox.colliderect(self.player1.curHurtBox) and self.player2.velocity[0] == 0:
+            self.player2.curHurtBox.x += self.player1.velocity[0]
+        if self.player1.curHurtBox.colliderect(self.player2.curHurtBox) and self.player1.velocity[0] == 0:
+            self.player1.curHurtBox.x += self.player2.velocity[0]
+        # Handle projectile collisions
         for i in projectiles:
             if self.player2.curHurtBox.colliderect(i.hitBox):
                 self.player2.checkHit(i.hitBox.getProperties())
