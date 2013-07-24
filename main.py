@@ -488,11 +488,11 @@ class CombatManager():
 
     def update(self):
         if self.player1.curHurtBox.x >= self.player2.curHurtBox.x:
-            self.player1.facingLeft = True
-            self.player2.facingLeft = False
+            self.player1.facingRight = False
+            self.player2.facingRight = True
         else:
-            self.player1.facingLeft = False
-            self.player2.facingLeft = True
+            self.player1.facingRight = True
+            self.player2.facingRight = False
         self.checkCollisions()
         self.updateCharacters()
 
