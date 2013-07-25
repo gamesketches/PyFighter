@@ -364,8 +364,8 @@ class Character(pygame.sprite.Sprite):
                     self.inputChain.append('DOWN')
             if button == 'JAB':
                 self.inputChain.append('JAB')
-            if button == K_s:
-                self.curAnimation = self.blockAnimations['standing']
+            if button == 'FIERCE':
+                self.inputChain.append('FIERCE')
             if button == 'UP':
                 self.state = 'prejump'
                 self.curAnimationFrame = 0
@@ -413,9 +413,13 @@ class Character(pygame.sprite.Sprite):
                     self.curMove = self.moveList[self.state].get(self.inputChain[-1])
                     self.curMove.initialize()
                 else:
-                    print self.inputChain[-4:]
                     self.curMove = self.moveList[self.state].get(self.inputChain[-1])
                     self.curMove.initialize()
+                del self.inputChain[:]
+                self.state = 'attacking'
+            elif self.inputChain[-1] == 'FIERCE':
+                self.curMove = self.moveList[self.state].get(self.inputChain[-1])
+                self.curMove.initialize()
                 del self.inputChain[:]
                 self.state = 'attacking'
         if 'TOWARD' in self.keysDown:
@@ -492,7 +496,7 @@ class Character(pygame.sprite.Sprite):
 class CombatManager():
     """ Class for managing collisions, inputs, gamestate, etc. """
     def __init__(self):
-        player1InputKeys = {K_a: 'JAB', K_UP: 'UP', K_RIGHT: 'RIGHT', K_DOWN: 'DOWN', \
+        player1InputKeys = {K_a: 'JAB', K_s:'FIERCE', K_UP: 'UP', K_RIGHT: 'RIGHT', K_DOWN: 'DOWN', \
                             K_LEFT: 'LEFT'}
         player2InputKeys = {K_u: 'JAB', K_i: 'RIGHT'}
         self.player1 = Character(300,200, player1InputKeys, True)
