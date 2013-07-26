@@ -115,11 +115,12 @@ class Projectile(pygame.sprite.Sprite):
         
 
 class Move():
-    def __init__(self, moveName, inputs, animation, hitboxes, properties, state):
+    def __init__(self, moveName, inputs, animation, hitboxes, properties, velocities, state):
         self.name = moveName
         self.inputs = inputs
         self.animation = animation
         self.hitboxes = []
+        self.velocities = velocities
         self.state = state
         for i in hitboxes:
             self.hitboxes.append(HitBox(i,properties))
@@ -137,6 +138,12 @@ class Move():
     def initialize(self):
         self.done = False
         self.animationFrame = 0
+
+    def getVelocities(self, facingRight):
+        if facingRight:
+            return self.velocities[self.animationFrame][0], self.velocities[self.animationFrame][1]
+        else:
+            return self.velocities[self.animationFrame][0] * -1, self.velocities[self.animationFrame][1] * -1
 
 class Character(pygame.sprite.Sprite):
     """ Class holds all info on a Character and interprets it's actions """
@@ -236,7 +243,13 @@ class Character(pygame.sprite.Sprite):
         while i != '&\n':
             hitBoxCoords.append(convertTextToCode(i))
             i = sourceFile.readline()
-        moveList[moveName] = Move(moveName, moveInput, load_animation('RyuSFA3.png', tempAnimation), hitBoxCoords, properties, state)
+        # read in velocities
+        velocityCoords = []
+        i = sourceFile.readline()
+        while i != '&\n':
+            velocityCoords.append(convertTextToCode(i))
+            i = sourceFile.readline()
+        moveList[moveName] = Move(moveName, moveInput, load_animation('RyuSFA3.png', tempAnimation), hitBoxCoords, properties, velocityCoords, state)
         
 
     def update(self, gameState):
@@ -484,6 +497,9 @@ class Character(pygame.sprite.Sprite):
         if self.curMove is None:
                 return pygame.transform.flip(self.curAnimation[self.curAnimationFrame], not self.facingRight, False), HitBox()
         else:
+            xOffset, yOffset = self.curMove.getVelocities(self.facingRight)
+            self.curHurtBox.x += xOffset
+            self.curHurtBox.y += yOffset
             returnVal, curHitBox = self.curMove.nextFrame()
             if self.curMove.done:
                 self.state = self.curMove.state
