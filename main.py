@@ -83,7 +83,10 @@ class HitBox(pygame.Rect):
         self.knockDown = properties['knockdown']
 
     def getProperties(self):
-        return (self.damage, self.hitStun, self.knockBack, self.knockDown, self.blockType)
+        if self.blockType is 'throw':
+            return (self.damage, self.x, self.y, self.knockDown, self.blockType)
+        else:
+            return (self.damage, self.hitStun, self.knockBack, self.knockDown, self.blockType)
 
     def adjustHitBox(self, x, y):
         # Shenanigans because pygame.Rect.move returns a rect :\
@@ -220,6 +223,12 @@ class Character(pygame.sprite.Sprite):
                     tempAnimation.append(convertTextToCode(i))
                     i = sourceFile.readline()
                 self.hitAnimation = load_animation('RyuSFA3.png', tempAnimation)
+            if i == 'thrown\n':
+                i = sourceFile.readline()
+                while i != '&\n':
+                    tempAnimation.append(convertTextToCode(i))
+                    i = sourceFile.readline()
+                self.getThrown = Move("getThrown", "getThrown", load_animation('RyuSFA3.png', tempAnimation), [(0,0,0,0)],{'damage':0,'hitstun':0,'knockback':0, 'knockdown':False,'blocktype':'mid'}, [(-10,-10)], 'knockedDown')
         self.curAnimation = self.neutralAnimations['standing']
         self.inputChain = [] # Keeps track of inputs for interpretting
         self.blockImage = None
@@ -262,6 +271,7 @@ class Character(pygame.sprite.Sprite):
                 self.curAnimation = self.neutralAnimations[self.state]
                 self.curAnimationFrame = 0
         elif self.hitStun and self.state == 'knockedDown':
+            print self.curHurtBox.bottom
             if self.curHurtBox.bottom >= 300:
                 self.curHurtBox.bottom = 300
                 self.velocity[0] = 0
@@ -475,9 +485,13 @@ class Character(pygame.sprite.Sprite):
                     self.velocity[0] = properties[2] * - 0.2
                 else:
                     self.velocity[0] = properties[2] * 0.2
-        if properties[3] == 'throw':
-            self.getHit(properties)
+        if properties[4] == 'throw':
+            self.state = 'thrown'
+            self.curMove = self.getThrown
+            #self.curHurtBox.x += properties[1]
+            #self.curHurtBox.y += properties[2]
         else:
+            print properties
             self.getHit(properties)
             
     def getHit(self, properties):
@@ -510,7 +524,16 @@ class Character(pygame.sprite.Sprite):
             if self.curMove.done:
                 self.state = self.curMove.state
                 self.curMove = None
-                self.curAnimation = self.neutralAnimations[self.state]
+                if self.state == 'knockedDown':
+                    self.curAnimation = self.knockDownAnimation
+                    self.hitStun = 100
+                    self.curHurtBox.h = self.knockDownAnimation[0].get_height()
+                    if self.facingRight:
+                        self.velocity[0] = 10
+                    else:
+                        self.velocity[0] = -10
+                else:
+                    self.curAnimation = self.neutralAnimations[self.state]
                 self.curAnimationFrame = 0
             curHitBox.adjustHitBox(self.curHurtBox.x + self.curHurtBox.w, self.curHurtBox.y)
             return pygame.transform.flip(returnVal, not self.facingRight, False), curHitBox
