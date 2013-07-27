@@ -340,7 +340,7 @@ class Character(pygame.sprite.Sprite):
                         #self.curAnimation = self.walkBackwardAnimation
                         #self.curAnimationFrame = 0
                         self.inputChain.append('BACK')
-            if button == 'LEFT':
+            elif button == 'LEFT':
                 if self.facingRight:
                     if 'DOWN' in self.keysDown:
                         self.inputChain.append('DOWNBACK')
@@ -361,7 +361,7 @@ class Character(pygame.sprite.Sprite):
                         self.curAnimation = self.walkforwardAnimation
                         self.curAnimationFrame = 0
                         self.inputChain.append('TOWARD')
-            if button == 'DOWN':
+            elif button == 'DOWN':
                 if 'TOWARD' in self.keysDown:
                     self.inputChain.append('DOWNTOWARD')
                     self.keysDown.append('DOWN')
@@ -375,14 +375,13 @@ class Character(pygame.sprite.Sprite):
                     self.curAnimationFrame = 0
                     self.curHurtBox.y = 300 - self.neutralAnimations['crouching'][0].get_height()
                     self.inputChain.append('DOWN')
-            if button == 'JAB':
-                self.inputChain.append('JAB')
-            if button == 'FIERCE':
-                self.inputChain.append('FIERCE')
-            if button == 'UP':
+            elif button == 'UP':
                 self.state = 'prejump'
                 self.curAnimationFrame = 0
                 self.velocity[1] = -11
+            # This handles all other inputs
+            elif button in self.inputs.values():
+                self.inputChain.append(button)
         # On button release
         else:
             if button == 'RIGHT':
@@ -435,6 +434,11 @@ class Character(pygame.sprite.Sprite):
                 self.curMove.initialize()
                 del self.inputChain[:]
                 self.state = 'attacking'
+            elif self.inputChain[-1] == 'THROW':
+                self.curMove = self.moveList[self.state].get(self.inputChain[-1])
+                self.curMove.initialize()
+                del self.inputChain[:]
+                self.state = 'attacking'
         if 'TOWARD' in self.keysDown:
             if self.facingRight: self.velocity[0] = 10
             else: self.velocity[0] = -10
@@ -471,6 +475,8 @@ class Character(pygame.sprite.Sprite):
                     self.velocity[0] = properties[2] * - 0.2
                 else:
                     self.velocity[0] = properties[2] * 0.2
+        if properties[3] == 'throw':
+            self.getHit(properties)
         else:
             self.getHit(properties)
             
@@ -512,7 +518,7 @@ class Character(pygame.sprite.Sprite):
 class CombatManager():
     """ Class for managing collisions, inputs, gamestate, etc. """
     def __init__(self):
-        player1InputKeys = {K_a: 'JAB', K_s:'FIERCE', K_UP: 'UP', K_RIGHT: 'RIGHT', K_DOWN: 'DOWN', \
+        player1InputKeys = {K_a: 'JAB', K_s:'FIERCE', K_d:'THROW', K_UP: 'UP', K_RIGHT: 'RIGHT', K_DOWN: 'DOWN', \
                             K_LEFT: 'LEFT'}
         player2InputKeys = {K_u: 'JAB', K_i: 'RIGHT'}
         self.player1 = Character(300,200, player1InputKeys, True)
