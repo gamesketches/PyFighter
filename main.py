@@ -91,8 +91,11 @@ class Meter():
         self.bar = pygame.Surface((self.perPixel * amount, self.barHeight))
 
     def draw(self,screen):
-        screen.blit(self.frame, (self.x, self.y))                
-        screen.blit(self.bar, (self.frame.get_width() * 0.975 - self.bar.get_width(), self.frame.get_height() * 0.1))
+        screen.blit(self.frame, (self.x, self.y))
+        if self.isPlayerOne:
+            screen.blit(self.bar, (self.frame.get_width() * 0.975 - self.bar.get_width(), self.frame.get_height() * 0.1))
+        else:
+            screen.blit(self.bar, (self.frame.get_width() * 0.025 + self.x, self.frame.get_height() * 0.1))
 
 class HitBox(pygame.Rect):
     def __init__(self, dimensions=(-1000,0,0,0), properties={'damage':0,'hitstun':0,'knockback':0, 'knockdown':False,'blocktype':'mid'}):
@@ -174,7 +177,10 @@ class Character(pygame.sprite.Sprite):
     """ Class holds all info on a Character and interprets it's actions """
     def __init__(self, x, y, inputs, facingRight):
         pygame.sprite.Sprite.__init__(self)
-        self.healthMeter = Meter((0,0,400,30),(150,150,0),(0,0,200),400,400,facingRight)
+        if facingRight:
+            self.healthMeter = Meter((0,0,400,30),(150,150,0),(0,0,200),400,400,facingRight)
+        else:
+            self.healthMeter = Meter((600,0,400,30),(150,150,0),(0,0,200),400,400,facingRight)
         self.health = 400
         self.velocity = [0,0]
         self.grounded = True
@@ -613,6 +619,7 @@ class CombatManager():
         for i in projectiles:
             screen.blit(i.image, (i.hitBox.x, i.hitBox.y))
         self.player1.healthMeter.draw(screen)
+        self.player2.healthMeter.draw(screen)
 
     def keyPressed(self, down, key):
         self.player1.keyPressed(down, key)
