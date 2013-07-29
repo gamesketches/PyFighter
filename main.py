@@ -76,24 +76,23 @@ class Meter():
     def __init__(self,dimensions,barColor,frameColor,startingAmount, maxAmount,isPlayerOne):
         self.frame = pygame.Surface((dimensions[2],dimensions[3]))
         self.frame.fill(frameColor)
-        self.bar = pygame.Surface((dimensions[2] * 0.8, dimensions[3] * 0.8))
-        self.bar.fill(barColor)
+        self.barHeight = dimensions[3] *0.8
         self.barColor = barColor
+        self.bar = pygame.Surface((dimensions[2] * 0.95, self.barHeight))
+        self.bar.fill(barColor)
         self.isPlayerOne = isPlayerOne
-        self.amount = 0
-        self.perPixel = self.bar.get_width() / maxAmount
+        self.perPixel = self.bar.get_width() / (maxAmount + 0.0)
         self.update(startingAmount)
         self.x = dimensions[0]
         self.y = dimensions[1]
         self.isPlayerOne = isPlayerOne
 
-    def update(self,incrementBy):
-        self.bar.set_width(self.perPixel * self.amount)
+    def update(self,amount):
+        self.bar = pygame.Surface((self.perPixel * amount, self.barHeight))
 
     def draw(self,screen):
-        self.frame.blit(self.bar, (self.frame.get_width() * 0.9 - self.bar.get_width(), self.frame.get_height() * 0.1))
         screen.blit(self.frame, (self.x, self.y))                
-        
+        screen.blit(self.bar, (self.frame.get_width() * 0.975 - self.bar.get_width(), self.frame.get_height() * 0.1))
 
 class HitBox(pygame.Rect):
     def __init__(self, dimensions=(-1000,0,0,0), properties={'damage':0,'hitstun':0,'knockback':0, 'knockdown':False,'blocktype':'mid'}):
@@ -175,8 +174,8 @@ class Character(pygame.sprite.Sprite):
     """ Class holds all info on a Character and interprets it's actions """
     def __init__(self, x, y, inputs, facingRight):
         pygame.sprite.Sprite.__init__(self)
-        self.meters = []
-        self.health = 0
+        self.healthMeter = Meter((0,0,400,30),(150,150,0),(0,0,200),400,400,facingRight)
+        self.health = 400
         self.velocity = [0,0]
         self.grounded = True
         self.hitStun = 0
@@ -294,7 +293,6 @@ class Character(pygame.sprite.Sprite):
                 self.curAnimation = self.neutralAnimations[self.state]
                 self.curAnimationFrame = 0
         elif self.hitStun and self.state == 'knockedDown':
-            print self.curHurtBox.bottom
             if self.curHurtBox.bottom >= 300:
                 self.curHurtBox.bottom = 300
                 self.velocity[0] = 0
@@ -614,6 +612,7 @@ class CombatManager():
         screen.blit(player2Frame, self.player2.curHurtBox.topleft)
         for i in projectiles:
             screen.blit(i.image, (i.hitBox.x, i.hitBox.y))
+        self.player1.healthMeter.draw(screen)
 
     def keyPressed(self, down, key):
         self.player1.keyPressed(down, key)
