@@ -178,10 +178,10 @@ class Character(pygame.sprite.Sprite):
     def __init__(self, x, y, inputs, facingRight):
         pygame.sprite.Sprite.__init__(self)
         if facingRight:
-            self.healthMeter = Meter((0,0,400,30),(150,150,0),(0,0,200),400,400,facingRight)
+            self.lifeBar = Meter((0,0,400,30),(150,150,0),(0,0,200),400,400,facingRight)
         else:
-            self.healthMeter = Meter((600,0,400,30),(150,150,0),(0,0,200),400,400,facingRight)
-        self.health = 400
+            self.lifeBar = Meter((600,0,400,30),(150,150,0),(0,0,200),400,400,facingRight)
+        self.life = 400
         self.velocity = [0,0]
         self.grounded = True
         self.hitStun = 0
@@ -526,7 +526,8 @@ class Character(pygame.sprite.Sprite):
         if not properties[3]:    
             self.curAnimation = self.hitAnimation
             self.curAnimationFrame = 0
-            #Put in damage here
+            self.life -= properties[0]
+            self.lifeBar.update(self.life)
             self.hitStun = properties[1]
             self.state = 'hit'
         else:
@@ -618,8 +619,8 @@ class CombatManager():
         screen.blit(player2Frame, self.player2.curHurtBox.topleft)
         for i in projectiles:
             screen.blit(i.image, (i.hitBox.x, i.hitBox.y))
-        self.player1.healthMeter.draw(screen)
-        self.player2.healthMeter.draw(screen)
+        self.player1.lifeBar.draw(screen)
+        self.player2.lifeBar.draw(screen)
 
     def keyPressed(self, down, key):
         self.player1.keyPressed(down, key)
