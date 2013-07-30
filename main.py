@@ -606,8 +606,8 @@ class CombatManager():
         font = pygame.font.Font(None, 36)
         self.startText = font.render("Ready?", 1, (200, 10, 10))
         self.fightText = font.render("FIGHT!", 1, (200,10,10))
-        self.player1Win = font.render("Player 1 Wins!",1,(10,10,10))
-        self.player2Win = font.render("Player 2 Wins!",1,(10,10,10))
+        self.player1Win = font.render("Player 1 Wins!",1,(200,10,10))
+        self.player2Win = font.render("Player 2 Wins!",1,(200,10,10))
 
     def update(self):
         if self.matchState == 'start' or self.matchState == 'wait':
@@ -639,8 +639,11 @@ class CombatManager():
                 projectiles.remove(i)
             if self.player1.curHurtBox.colliderect(i.hitBox):
                 self.player1.checkHit(i.hitBox.getProperties())
-        if self.player1.state == 'KO' or self.player2.state == 'KO':
-            #Display round over message
+        if self.player1.state == 'KO':
+            self.matchState = 'wait'
+            self.winText = self.player2Win
+        elif self.player2.state == 'KO':
+            self.winText = self.player1Win
             self.matchState = 'wait'
             
 
@@ -658,6 +661,8 @@ class CombatManager():
                 screen.blit(self.fightText, (screen.get_width() /2, screen.get_height() /2))
             else:
                 self.matchState = 'battle'
+        if self.matchState == 'wait':
+            screen.blit(self.winText, (screen.get_width() /2, screen.get_height() /2))
         player1Frame, self.player1HitBox = self.player1.currentFrame()
         player2Frame, self.player2HitBox = self.player2.currentFrame()
         screen.blit(player1Frame, self.player1.curHurtBox.topleft)
