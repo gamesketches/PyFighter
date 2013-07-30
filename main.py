@@ -88,7 +88,10 @@ class Meter():
         self.isPlayerOne = isPlayerOne
 
     def update(self,amount):
-        self.bar = pygame.Surface((self.perPixel * amount, self.barHeight))
+        if amount > 0:
+            self.bar = pygame.Surface((self.perPixel * amount, self.barHeight))
+        else:
+            self.bar = pygame.Surface((0,0))
 
     def draw(self,screen):
         screen.blit(self.frame, (self.x, self.y))
@@ -290,7 +293,15 @@ class Character(pygame.sprite.Sprite):
         
 
     def update(self, gameState):
-        if self.hitStun and self.state != 'knockedDown':
+        if self.state == 'KO':
+            if self.curHurtBox.bottom >= 300:
+                self.curHurtBox.bottom = 300
+                self.velocity[0] = 0
+                self.hitStun -= 1
+            else:
+                self.curHurtBox.y += 5
+                self.curHurtBox.x += self.velocity[0]
+        elif self.hitStun and self.state != 'knockedDown':
             self.hitStun -= 1
             self.curHurtBox.x += self.velocity[0]
             self.velocity[0] = towardsZero(self.velocity[0], 1)
@@ -518,7 +529,6 @@ class Character(pygame.sprite.Sprite):
             #self.curHurtBox.x += properties[1]
             #self.curHurtBox.y += properties[2]
         else:
-            print properties
             self.getHit(properties)
             
     def getHit(self, properties):
@@ -526,8 +536,6 @@ class Character(pygame.sprite.Sprite):
         if not properties[3]:    
             self.curAnimation = self.hitAnimation
             self.curAnimationFrame = 0
-            self.life -= properties[0]
-            self.lifeBar.update(self.life)
             self.hitStun = properties[1]
             self.state = 'hit'
         else:
@@ -540,6 +548,13 @@ class Character(pygame.sprite.Sprite):
             self.velocity[0] = properties[2] * -1
         else:
             self.velocity[0] = properties[2]
+        self.life -= properties[0]
+        self.lifeBar.update(self.life)
+        if self.life <= 0:
+                self.state = 'KO'
+                self.curAnimation = self.knockDownAnimation
+                self.curAnimationFrame = 0
+                self.curHurtBox.h = self.knockDownAnimation[0].get_height()
 
     def currentFrame(self):
         if self.curMove is None:
@@ -571,21 +586,23 @@ class CombatManager():
     def __init__(self):
         player1InputKeys = {K_a: 'JAB', K_s:'FIERCE', K_d:'THROW', K_UP: 'UP', K_RIGHT: 'RIGHT', K_DOWN: 'DOWN', \
                             K_LEFT: 'LEFT'}
-        player2InputKeys = {K_u: 'JAB', K_i: 'RIGHT'}
+        player2InputKeys = {K_u: 'JAB', K_i: 'LEFT'}
         self.player1 = Character(300,200, player1InputKeys, True)
         self.player2 = Character (600,200, player2InputKeys, False)
         self.player1HitBox = HitBox()
         self.player2HitBox = HitBox()
+        self.matchState = 'battle'
+        self.frameTimer = 0
 
-    def update(self):
-        if self.player1.curHurtBox.x >= self.player2.curHurtBox.x and self.player1.facingRight:
-            self.player1.switchSides()
-            self.player2.switchSides()
-        elif self.player1.curHurtBox.x < self.player2.curHurtBox.x and self.player2.facingRight:
-            self.player1.switchSides()
-            self.player2.switchSides()
-        self.checkCollisions()
-        self.updateCharacters()
+    def update(self): 
+            if self.player1.curHurtBox.x >= self.player2.curHurtBox.x and self.player1.facingRight:
+                self.player1.switchSides()
+                self.player2.switchSides()
+            elif self.player1.curHurtBox.x < self.player2.curHurtBox.x and self.player2.facingRight:
+                self.player1.switchSides()
+                self.player2.switchSides()
+            self.checkCollisions()
+            self.updateCharacters()
 
     def checkCollisions(self):
         # Handle attack collisions
@@ -605,6 +622,10 @@ class CombatManager():
                 projectiles.remove(i)
             if self.player1.curHurtBox.colliderect(i.hitBox):
                 self.player1.checkHit(i.hitBox.getProperties())
+        if self.player1.state == 'KO' or self.player2.state == 'KO':
+            #Display round over message
+            self.matchState = 'wait'
+            
 
     def updateCharacters(self):
         self.player1.update(self.player2.state)
@@ -623,8 +644,9 @@ class CombatManager():
         self.player2.lifeBar.draw(screen)
 
     def keyPressed(self, down, key):
-        self.player1.keyPressed(down, key)
-        self.player2.keyPressed(down, key)
+        if self.matchState != 'wait':
+            self.player1.keyPressed(down, key)
+            self.player2.keyPressed(down, key)
 
 def main():
     
