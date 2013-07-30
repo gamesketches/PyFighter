@@ -439,21 +439,26 @@ class Character(pygame.sprite.Sprite):
         else:
             if button == 'RIGHT':
                 if self.facingRight:
-                    del self.keysDown[self.keysDown.index('TOWARD')]
-                    self.curAnimation = self.neutralAnimations['standing']
+                    if 'TOWARD' in self.keysDown:
+                        del self.keysDown[self.keysDown.index('TOWARD')]
+                        self.curAnimation = self.neutralAnimations['standing']
                 else:
-                    del self.keysDown[self.keysDown.index('BACK')]
-                    self.curAnimation = self.neutralAnimations['standing']
+                    if 'BACK' in self.keysDown:
+                        del self.keysDown[self.keysDown.index('BACK')]
+                        self.curAnimation = self.neutralAnimations['standing']
             if button == 'LEFT':
                 if self.facingRight:
-                    del self.keysDown[self.keysDown.index('BACK')]
-                    self.curAnimation = self.neutralAnimations['standing']
+                    if 'TOWARD' in self.keysDown:
+                        del self.keysDown[self.keysDown.index('BACK')]
+                        self.curAnimation = self.neutralAnimations['standing']
                 else:
-                    del self.keysDown[self.keysDown.index('TOWARD')]
-                    self.curAnimation = self.neutralAnimations['standing']
+                    if 'BACK' in self.keysDown:
+                        del self.keysDown[self.keysDown.index('TOWARD')]
+                        self.curAnimation = self.neutralAnimations['standing']
             if button == 'DOWN':
-                del self.keysDown[self.keysDown.index('DOWN')]
-                self.state = 'standing'
+                if 'DOWN' in self.keysDown:
+                    del self.keysDown[self.keysDown.index('DOWN')]
+                    self.state = 'standing'
                 if 'TOWARD' in self.keysDown:
                     self.inputChain.append('TOWARD')
                 self.curAnimation = self.neutralAnimations['standing']
