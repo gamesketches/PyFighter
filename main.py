@@ -596,18 +596,25 @@ class CombatManager():
         self.player2 = Character (600,200, player2InputKeys, False)
         self.player1HitBox = HitBox()
         self.player2HitBox = HitBox()
-        self.matchState = 'battle'
-        self.frameTimer = 0
+        self.matchState = 'start'
+        self.frameTimer = 30
+        font = pygame.font.Font(None, 36)
+        self.startText = font.render("Ready?", 1, (200, 10, 10))
+        self.fightText = font.render("FIGHT!", 1, (200,10,10))
+        self.player1Win = font.render("Player 1 Wins!",1,(10,10,10))
+        self.player2Win = font.render("Player 2 Wins!",1,(10,10,10))
 
-    def update(self): 
-            if self.player1.curHurtBox.x >= self.player2.curHurtBox.x and self.player1.facingRight:
-                self.player1.switchSides()
-                self.player2.switchSides()
-            elif self.player1.curHurtBox.x < self.player2.curHurtBox.x and self.player2.facingRight:
-                self.player1.switchSides()
-                self.player2.switchSides()
-            self.checkCollisions()
-            self.updateCharacters()
+    def update(self):
+        if self.matchState == 'start' or self.matchState == 'wait':
+            self.frameTimer -= 1
+        if self.player1.curHurtBox.x >= self.player2.curHurtBox.x and self.player1.facingRight:
+            self.player1.switchSides()
+            self.player2.switchSides()
+        elif self.player1.curHurtBox.x < self.player2.curHurtBox.x and self.player2.facingRight:
+            self.player1.switchSides()
+            self.player2.switchSides()
+        self.checkCollisions()
+        self.updateCharacters()
 
     def checkCollisions(self):
         # Handle attack collisions
@@ -639,6 +646,13 @@ class CombatManager():
             i.update()
 
     def drawPlayers(self, screen):
+        if self.matchState == 'start':
+            if self.frameTimer > 5:
+                screen.blit(self.startText, (screen.get_width() /2, screen.get_height() /2))
+            elif self.frameTimer > 0:
+                screen.blit(self.fightText, (screen.get_width() /2, screen.get_height() /2))
+            else:
+                self.matchState = 'battle'
         player1Frame, self.player1HitBox = self.player1.currentFrame()
         player2Frame, self.player2HitBox = self.player2.currentFrame()
         screen.blit(player1Frame, self.player1.curHurtBox.topleft)
@@ -649,7 +663,7 @@ class CombatManager():
         self.player2.lifeBar.draw(screen)
 
     def keyPressed(self, down, key):
-        if self.matchState != 'wait':
+        if self.matchState == 'battle':
             self.player1.keyPressed(down, key)
             self.player2.keyPressed(down, key)
 
