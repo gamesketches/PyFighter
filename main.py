@@ -116,11 +116,16 @@ class HitBox(pygame.Rect):
         else:
             return (self.damage, self.hitStun, self.knockBack, self.knockDown, self.blockType)
 
-    def adjustHitBox(self, x, y):
+    def adjustHitBox(self, x, width, y, facingRight):
         # Shenanigans because pygame.Rect.move returns a rect :\
-        tempRect = self.move(x - self.x,y - self.y)
-        self.x = tempRect.x
-        self.y = tempRect.y
+        if facingRight:
+            tempRect = self.move((x + width) - self.x,y - self.y)
+            self.x = tempRect.x
+            self.y = tempRect.y
+        else:
+            #tempRect = self.move(x - self.width - self.x, self.y)
+            self.right = x
+            self.y = y - self.y
 
 class Projectile(pygame.sprite.Sprite):
     def __init__(self, animation, hitBox, velocity, owner):
@@ -578,7 +583,7 @@ class Character(pygame.sprite.Sprite):
                 else:
                     self.curAnimation = self.neutralAnimations[self.state]
                 self.curAnimationFrame = 0
-            curHitBox.adjustHitBox(self.curHurtBox.x + self.curHurtBox.w, self.curHurtBox.y)
+            curHitBox.adjustHitBox(self.curHurtBox.x, self.curHurtBox.w, self.curHurtBox.y, self.facingRight)
             return pygame.transform.flip(returnVal, not self.facingRight, False), curHitBox
 
 class CombatManager():
