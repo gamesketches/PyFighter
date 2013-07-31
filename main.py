@@ -416,7 +416,6 @@ class Character(pygame.sprite.Sprite):
                 if self.facingRight:
                     if 'DOWN' in self.keysDown:
                         self.inputChain.append('DOWNBACK')
-                        print "Downback"
                         self.keysDown.append('BACK')
                     else:
                         self.keysDown.append('BACK')
@@ -467,11 +466,11 @@ class Character(pygame.sprite.Sprite):
                         self.curAnimation = self.neutralAnimations['standing']
             if button == 'LEFT':
                 if self.facingRight:
-                    if 'TOWARD' in self.keysDown:
+                    if 'BACK' in self.keysDown:
                         del self.keysDown[self.keysDown.index('BACK')]
                         self.curAnimation = self.neutralAnimations['standing']
                 else:
-                    if 'BACK' in self.keysDown:
+                    if 'TOWARD' in self.keysDown:
                         del self.keysDown[self.keysDown.index('TOWARD')]
                         self.curAnimation = self.neutralAnimations['standing']
             if button == 'DOWN':
