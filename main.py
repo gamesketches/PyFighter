@@ -366,6 +366,13 @@ class Character(pygame.sprite.Sprite):
                 #self.curHurtBox.y = 300 - self.curHurtBox.h
                 #print ""
 
+    def startPosition(self, x, y, life):
+        self.curHurtBox.x = x
+        self.curHurtBox.y = y
+        self.life = life
+        self.lifeBar.update(life)
+        self.state = 'standing'
+
     def keyPressed(self, state, pressedButton):
         # If Keys pushed down
         if pressedButton in self.inputs:
@@ -612,6 +619,11 @@ class CombatManager():
     def update(self):
         if self.matchState == 'start' or self.matchState == 'wait':
             self.frameTimer -= 1
+            if self.matchState == 'wait' and self.frameTimer == 0:
+                self.matchState = 'start'
+                self.frameTimer = 30
+                self.player1.startPosition(300,200, 400)
+                self.player2.startPosition(600,200,400)
         if self.player1.curHurtBox.x >= self.player2.curHurtBox.x and self.player1.facingRight:
             self.player1.switchSides()
             self.player2.switchSides()
@@ -639,12 +651,14 @@ class CombatManager():
                 projectiles.remove(i)
             if self.player1.curHurtBox.colliderect(i.hitBox):
                 self.player1.checkHit(i.hitBox.getProperties())
-        if self.player1.state == 'KO':
+        if self.player1.state == 'KO' and self.matchState != 'wait':
             self.matchState = 'wait'
             self.winText = self.player2Win
-        elif self.player2.state == 'KO':
+            self.frameTimer = 30
+        elif self.player2.state == 'KO' and self.matchState != 'wait':
             self.winText = self.player1Win
             self.matchState = 'wait'
+            self.frameTimer = 30
             
 
     def updateCharacters(self):
