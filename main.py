@@ -259,6 +259,12 @@ class Character(pygame.sprite.Sprite):
                     tempAnimation.append(convertTextToCode(i))
                     i = sourceFile.readline()
                 self.hitAnimation = load_animation('RyuSFA3.png', tempAnimation)
+            if i == 'jumping\n':
+                i = sourceFile.readline()
+                while i != '&\n':
+                    tempAnimation.append(convertTextToCode(i))
+                    i = sourceFile.readline()
+                self.neutralAnimations['jumping'] = load_animation('RyuSFA3.png', tempAnimation)
             if i == 'thrown\n':
                 i = sourceFile.readline()
                 while i != '&\n':
@@ -346,15 +352,21 @@ class Character(pygame.sprite.Sprite):
                 if self.curAnimationFrame >= 3:
                     self.grounded = False
                     self.state = 'jumping'
+                    self.curAnimation = self.neutralAnimations[self.state]
+                    self.curAnimationFrame = 0
                 self.curAnimationFrame += 1
             if self.state == 'jumping':
                 self.curHurtBox.y += self.velocity[1]
                 self.curHurtBox.x += self.velocity[0]
                 self.velocity[1] += 1
+                if self.curAnimationFrame < len(self.curAnimation) - 1:
+                    self.curAnimationFrame += 1
                 if self.curHurtBox.bottom >= 300:
                     self.curHurtBox.bottom = 300
                     self.grounded = True
                     self.state = 'standing'
+                    self.curAnimation = self.neutralAnimations['standing']
+                    self.curAnimationFrame = 0
             #If you are just walking
             if self.state == 'standing':
                 self.curHurtBox.y = 300 - self.curAnimation[0].get_height()
