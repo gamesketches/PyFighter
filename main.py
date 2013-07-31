@@ -265,6 +265,14 @@ class Character(pygame.sprite.Sprite):
                     tempAnimation.append(convertTextToCode(i))
                     i = sourceFile.readline()
                 self.neutralAnimations['jumping'] = load_animation('RyuSFA3.png', tempAnimation)
+                i = sourceFile.readline()
+                tempAnimation = []
+                tempMoveList = {}
+                while i != '@\n':
+                    if i == 'normalMove\n':
+                        self.loadNormalMove(sourceFile,tempMoveList,'jumping')
+                    i = sourceFile.readline()
+                self.moveList['jumping'] = tempMoveList
             if i == 'thrown\n':
                 i = sourceFile.readline()
                 while i != '&\n':
@@ -365,6 +373,7 @@ class Character(pygame.sprite.Sprite):
                     self.curHurtBox.bottom = 300
                     self.grounded = True
                     self.state = 'standing'
+                    self.curMove = None
                     self.curAnimation = self.neutralAnimations['standing']
                     self.curAnimationFrame = 0
             #If you are just walking
@@ -532,9 +541,8 @@ class Character(pygame.sprite.Sprite):
             else: self.velocity[0] = 10
         elif 'DOWN' in self.keysDown:
             self.velocity[0] = 0
-            
-        elif self.state != 'prejump' and self.state != 'jumping':
-            self.velocity[0] = 0
+        elif self.state != 'prejump' and self.state != 'jumping' and self.state != 'attacking':
+                self.velocity[0] = 0
 
     def checkHit(self, properties):
         if self.state == 'standBlocking':
@@ -588,7 +596,10 @@ class Character(pygame.sprite.Sprite):
         if self.curMove is None:
                 return pygame.transform.flip(self.curAnimation[self.curAnimationFrame], not self.facingRight, False), HitBox()
         else:
-            xOffset, yOffset = self.curMove.getVelocities(self.facingRight)
+            if self.curMove.state != 'jumping':                    
+                xOffset, yOffset = self.curMove.getVelocities(self.facingRight)
+            else:
+                xOffset, yOffset = self.velocity[0], self.velocity[1]
             self.curHurtBox.x += xOffset
             self.curHurtBox.y += yOffset
             returnVal, curHitBox = self.curMove.nextFrame()
