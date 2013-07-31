@@ -506,19 +506,12 @@ class Character(pygame.sprite.Sprite):
 
     def interpretInputs(self, gameState):
         if len(self.inputChain):
-            if self.inputChain[-1] == 'JAB':
-                if ",".join(self.inputChain[-2:]) == 'TOWARD,JAB':
-                    self.curMove = self.moveList[self.state].get('TOWARD,JAB')
-                    self.curMove.initialize(self.curHurtBox.x + self.curHurtBox.w, self.curHurtBox.y)
-                elif ",".join(self.inputChain[-4:]) == 'DOWN,DOWNTOWARD,TOWARD,JAB':
-                    Projectile(load_animation('RyuSFA3.png', [(541,3109,73,38)]), HitBox((self.curHurtBox.x, self.curHurtBox.y, 73, 38)), 10, 'p1')
-                    # These two lines are just to stop Ryu from crashing.
-                    # #They should be removed once special moves are properly implemented
-                    self.curMove = self.moveList[self.state].get(self.inputChain[-1])
-                    self.curMove.initialize(self.curHurtBox.x, self.curHurtBox.y)
-                else:
-                    self.curMove = self.moveList[self.state].get(self.inputChain[-1])
-                    self.curMove.initialize(self.curHurtBox.x, self.curHurtBox.y)
+            if self.inputChain[-1] == 'JAB' and self.state != 'attacking' and self.state != 'prejump':
+                for i in range(4,1,-1):
+                    if self.moveList[self.state].get(",".join(self.inputChain[-i:])):
+                        self.curMove = self.moveList[self.state].get(",".join(self.inputChain[-i:]))
+                        self.curMove.initialize(self.curHurtBox.right + 1, self.curHurtBox.y)
+                        break
                 del self.inputChain[:]
                 self.state = 'attacking'
             elif self.inputChain[-1] == 'FIERCE':

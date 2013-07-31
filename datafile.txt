@@ -115,7 +115,7 @@ mid
 5,0
 &
 normalMove
-TOWARD,JAB
+DOWN,DOWNTOWARD,TOWARD,JAB
 projectile
 10,10,10,0
 mid
