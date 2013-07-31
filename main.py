@@ -505,23 +505,25 @@ class Character(pygame.sprite.Sprite):
                 
 
     def interpretInputs(self, gameState):
-        if len(self.inputChain):
-            if self.inputChain[-1] == 'JAB' and self.state != 'attacking' and self.state != 'prejump':
-                for i in range(4,1,-1):
-                    if self.moveList[self.state].get(",".join(self.inputChain[-i:])):
-                        self.curMove = self.moveList[self.state].get(",".join(self.inputChain[-i:]))
-                        self.curMove.initialize(self.curHurtBox.right + 1, self.curHurtBox.y)
-                        break
-                del self.inputChain[:]
-                self.state = 'attacking'
-            elif self.inputChain[-1] == 'FIERCE':
-                self.curMove = self.moveList[self.state].get(self.inputChain[-1])
+        if len(self.inputChain) and self.state != 'prejump' and self.state != 'attacking':
+            if self.moveList[self.state].get(",".join(self.inputChain[-4:])) != None:
+                self.curMove = self.moveList[self.state].get(",".join(self.inputChain[-4:]))
                 self.curMove.initialize(self.curHurtBox.x, self.curHurtBox.y)
                 del self.inputChain[:]
                 self.state = 'attacking'
-            elif self.inputChain[-1] == 'THROW':
+            elif self.moveList[self.state].get(",".join(self.inputChain[-3:])) != None:
+                self.curMove = self.moveList[self.state].get(",".join(self.inputChain[-3:]))
+                self.curMove.initialize(self.curHurtBox.x, self.curHurtBox.y)
+                del self.inputChain[:]
+                self.state = 'attacking'
+            elif self.moveList[self.state].get(",".join(self.inputChain[-2:])) != None:
+                self.curMove = self.moveList[self.state].get(",".join(self.inputChain[-2:]))
+                self.curMove.initialize(self.curHurtBox.x, self.curHurtBox.y)
+                del self.inputChain[:]
+                self.state = 'attacking'
+            elif self.moveList[self.state].get(self.inputChain[-1]):
                 self.curMove = self.moveList[self.state].get(self.inputChain[-1])
-                self.curMove.initialize()
+                self.curMove.initialize(self.curHurtBox.x, self.curHurtBox.y)
                 del self.inputChain[:]
                 self.state = 'attacking'
         if 'TOWARD' in self.keysDown:
