@@ -151,9 +151,9 @@ class Projectile(pygame.sprite.Sprite):
         
 
 class Move():
-    def __init__(self, moveName, inputs, animation, hitboxes, properties, velocities, state):
+    def __init__(self, moveName, moveType, animation, hitboxes, properties, velocities, state):
         self.name = moveName
-        self.inputs = inputs
+        self.type = moveType
         self.animation = animation
         self.hitboxes = []
         self.velocities = velocities
@@ -171,9 +171,13 @@ class Move():
             self.done = True
         return returnedImage, returnedHitBox
     
-    def initialize(self):
+    def initialize(self,x,y):
         self.done = False
         self.animationFrame = 0
+        if self.type == 'projectile\n':
+            Projectile(load_animation('RyuSFA3.png', [(541,3109,73,38)]), HitBox((x, y, 73, 38)), 10, 'p1')
+        
+        
 
     def getVelocities(self, facingRight):
         if facingRight:
@@ -287,7 +291,7 @@ class Character(pygame.sprite.Sprite):
         tempAnimation = []
         moveName = sourceFile.readline()
         moveName = moveName[:-1]
-        moveInput = sourceFile.readline()
+        moveType = sourceFile.readline()
         tempProperties = convertTextToCode(sourceFile.readline())
         blockType = sourceFile.readline()[:-1]
         properties = {'damage':tempProperties[0], 'hitstun':tempProperties[1],'knockback':tempProperties[2], 'knockdown': tempProperties[3],'blocktype': blockType}
@@ -308,7 +312,7 @@ class Character(pygame.sprite.Sprite):
         while i != '&\n':
             velocityCoords.append(convertTextToCode(i))
             i = sourceFile.readline()
-        moveList[moveName] = Move(moveName, moveInput, load_animation('RyuSFA3.png', tempAnimation), hitBoxCoords, properties, velocityCoords, state)
+        moveList[moveName] = Move(moveName, moveType, load_animation('RyuSFA3.png', tempAnimation), hitBoxCoords, properties, velocityCoords, state)
         
 
     def update(self, gameState):
@@ -503,20 +507,23 @@ class Character(pygame.sprite.Sprite):
     def interpretInputs(self, gameState):
         if len(self.inputChain):
             if self.inputChain[-1] == 'JAB':
-                if ",".join(self.inputChain[-4:]) == 'DOWN,DOWNTOWARD,TOWARD,JAB':
+                if ",".join(self.inputChain[-2:]) == 'TOWARD,JAB':
+                    self.curMove = self.moveList[self.state].get('TOWARD,JAB')
+                    self.curMove.initialize(self.curHurtBox.x + self.curHurtBox.w, self.curHurtBox.y)
+                elif ",".join(self.inputChain[-4:]) == 'DOWN,DOWNTOWARD,TOWARD,JAB':
                     Projectile(load_animation('RyuSFA3.png', [(541,3109,73,38)]), HitBox((self.curHurtBox.x, self.curHurtBox.y, 73, 38)), 10, 'p1')
                     # These two lines are just to stop Ryu from crashing.
                     # #They should be removed once special moves are properly implemented
                     self.curMove = self.moveList[self.state].get(self.inputChain[-1])
-                    self.curMove.initialize()
+                    self.curMove.initialize(self.curHurtBox.x, self.curHurtBox.y)
                 else:
                     self.curMove = self.moveList[self.state].get(self.inputChain[-1])
-                    self.curMove.initialize()
+                    self.curMove.initialize(self.curHurtBox.x, self.curHurtBox.y)
                 del self.inputChain[:]
                 self.state = 'attacking'
             elif self.inputChain[-1] == 'FIERCE':
                 self.curMove = self.moveList[self.state].get(self.inputChain[-1])
-                self.curMove.initialize()
+                self.curMove.initialize(self.curHurtBox.x, self.curHurtBox.y)
                 del self.inputChain[:]
                 self.state = 'attacking'
             elif self.inputChain[-1] == 'THROW':
