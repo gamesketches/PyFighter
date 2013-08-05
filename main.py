@@ -727,15 +727,18 @@ def main():
     background = background.convert()
     background.fill((0, 0, 0))
 
+    #Create character select background
+    charSelectBackground, itsRect = load_image('character_select.jpg')
+
     #Display The Background
     screen.blit(background, (0,0))
     pygame.display.flip()
 
     #Prepare Game Objects
     clock = pygame.time.Clock()
-    #player1 = Character()
-    combatManager = CombatManager()   
+    combatManager = None  
     going = True
+    gameState = 'characterSelect'
     while going:
         clock.tick(15)
         key = None
@@ -746,13 +749,21 @@ def main():
                 if event.key == K_ESCAPE:
                     pygame.quit()
                 else:
-                    key = event.key
-                    combatManager.keyPressed(True, event.key)
+                    if gameState == 'combat':
+                        key = event.key
+                        combatManager.keyPressed(True, event.key)
+                    else:
+                        combatManager = CombatManager()
+                        gameState = 'combat'
             elif event.type == KEYUP:
-                combatManager.keyPressed(False, event.key)
-        combatManager.update()
-        screen.blit(background, (0,0))
-        combatManager.drawPlayers(screen)
+                if gameState == 'combat':
+                    combatManager.keyPressed(False, event.key)
+        if gameState == 'combat':
+            screen.blit(background, (0,0))
+            combatManager.update()
+            combatManager.drawPlayers(screen)
+        else:
+            screen.blit(charSelectBackground, (0,0))
         pygame.display.flip()
 
 if __name__ == '__main__':
