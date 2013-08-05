@@ -715,6 +715,15 @@ class CombatManager():
             self.player1.keyPressed(down, key)
             self.player2.keyPressed(down, key)
 
+class Cursor():
+    def __init__(self,theRect,interval,color):
+        self.interval = interval
+        self.color = color
+        self.points = [theRect.bottomleft, theRect.topleft, theRect.topright, theRect.bottomright]
+
+    def applyCursor(self, surface):
+        pygame.draw.lines(surface,self.color,True,self.points,3)
+
 def main():
     
     #Initialize Everything
@@ -729,6 +738,7 @@ def main():
 
     #Create character select background
     charSelectBackground, itsRect = load_image('character_select.jpg')
+    player1Cursor = Cursor(Rect(200,100,100,150),100,(250,250,0))
 
     #Display The Background
     screen.blit(background, (0,0))
@@ -763,6 +773,7 @@ def main():
             combatManager.update()
             combatManager.drawPlayers(screen)
         else:
+            player1Cursor.applyCursor(charSelectBackground)
             screen.blit(charSelectBackground, (0,0))
         pygame.display.flip()
 
