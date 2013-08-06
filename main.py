@@ -724,9 +724,16 @@ class Cursor():
         self.interval = interval
         self.color = color
         self.points = [theRect.bottomleft, theRect.topleft, theRect.topright, theRect.bottomright]
+        print self.points
 
     def applyCursor(self, surface):
         pygame.draw.lines(surface,self.color,True,self.points,3)
+
+    def moveCursor(self, direction):
+        if direction == 'right':
+            interval = self.points[2][0] - self.points[1][0]
+            for i in range(len(self.points)):
+                self.points[i] = (self.points[i][0] + interval, self.points[i][1])
 
 def main():
     
@@ -742,6 +749,7 @@ def main():
 
     #Create character select background
     charSelectBackground, itsRect = load_image('character_select.jpg')
+    charSelectBackgroundCopy = charSelectBackground.copy()
     player1Cursor = Cursor(Rect(200,100,100,150),100,(250,250,0))
 
     #Display The Background
@@ -767,8 +775,10 @@ def main():
                         key = event.key
                         combatManager.keyPressed(True, event.key)
                     else:
-                        combatManager = CombatManager()
-                        gameState = 'combat'
+                        if event.key == K_RIGHT:
+                            player1Cursor.moveCursor('right')
+                        #combatManager = CombatManager()
+                        #gameState = 'combat'
             elif event.type == KEYUP:
                 if gameState == 'combat':
                     combatManager.keyPressed(False, event.key)
@@ -777,6 +787,7 @@ def main():
             combatManager.update()
             combatManager.drawPlayers(screen)
         else:
+            charSelectBackground = charSelectBackgroundCopy.copy()
             player1Cursor.applyCursor(charSelectBackground)
             screen.blit(charSelectBackground, (0,0))
         pygame.display.flip()
