@@ -134,7 +134,7 @@ class Projectile(pygame.sprite.Sprite):
         self.velocity = velocity
         self.curAnimationFrame = 0
         self.image = self.animation[self.curAnimationFrame]
-        projectiles.append(self)
+        #projectiles.append(self)
 
     def update(self):
         self.calcNewPos()
@@ -147,13 +147,15 @@ class Projectile(pygame.sprite.Sprite):
         self.hitBox.x += 10
 
     def kill(self):
-        del self
+        projectiles.remove(self)
         
 
 class Move():
     def __init__(self, moveName, moveType, animation, hitboxes, properties, velocities, state):
         self.name = moveName
         self.type = moveType
+        if self.type == 'projectile\n':
+            self.projectile = Projectile(load_animation('RyuSFA3.png', [(541,3109,73,38)]), HitBox((-100, 0, 73, 38)), 10, 'p1')
         self.animation = animation
         self.hitboxes = []
         self.velocities = velocities
@@ -175,7 +177,9 @@ class Move():
         self.done = False
         self.animationFrame = 0
         if self.type == 'projectile\n':
-            Projectile(load_animation('RyuSFA3.png', [(541,3109,73,38)]), HitBox((x, y, 73, 38)), 10, 'p1')
+            self.projectile.hitBox.x = x
+            self.projectile.hitBox.y = y
+            projectiles.append(self.projectile)
         
         
 
