@@ -772,6 +772,39 @@ def main():
     combatManager = None  
     going = True
     gameState = 'characterSelect'
+    font = pygame.font.Font(None, 36)
+    keyConfigStrings = ["Player1 Up", "Player1 Down", "Player1 Left", "Player1 Right", "Player1 Jab", "Player1 Fierce", "Player1 Throw", \
+                        "Player2 Up", "Player2 Down", "Player2 Left", "Player2 Right", "Player2 Jab", "Player2 Fierce", "Player2 Throw"]
+    keyConfigValues = ["UP","DOWN","LEFT","RIGHT","JAB","FIERCE","THROW"]
+    k = 0
+    tempKeyConfig = {}
+    player1Keys = {}
+    player2Keys = {}
+    for i in keyConfigStrings:
+        if k >= len(keyConfigValues):
+            k = 0
+            player1Keys = tempKeyConfig
+            tempKeyConfig = {}
+        configText = font.render(i, 1, (200,10,10))
+        screen.blit(configText, (screen.get_width() /2, screen.get_height() /2))
+        while True:
+            clock.tick(15)
+            key = 0
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    pygame.quit()
+                elif event.type == KEYDOWN:
+                    if event.key == K_ESCAPE:
+                        pygame.quit()
+                    else:
+                        tempKeyConfig[event.key] = keyConfigValues[k]
+                        key = 1
+            if key:
+                k += 1
+                screen.blit(background,(0,0))
+                break
+            pygame.display.flip()
+    player2Keys = tempKeyConfig
     while going:
         clock.tick(15)
         key = None
@@ -795,6 +828,7 @@ def main():
                         elif event.key == K_UP:
                             player1Cursor.moveCursor('up')
                         else:
+                            # Put the round start screen here
                             screen.blit(background, (0,0))
                             pygame.display.flip()
                             combatManager = CombatManager()
