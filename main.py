@@ -795,6 +795,8 @@ def main():
                         elif event.key == K_UP:
                             player1Cursor.moveCursor('up')
                         else:
+                            screen.blit(background, (0,0))
+                            pygame.display.flip()
                             combatManager = CombatManager()
                             gameState = 'combat'
             elif event.type == KEYUP:
