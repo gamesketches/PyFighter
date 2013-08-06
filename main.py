@@ -724,7 +724,6 @@ class Cursor():
         self.interval = interval
         self.color = color
         self.points = [theRect.bottomleft, theRect.topleft, theRect.topright, theRect.bottomright]
-        print self.points
 
     def applyCursor(self, surface):
         pygame.draw.lines(surface,self.color,True,self.points,3)
@@ -734,6 +733,18 @@ class Cursor():
             interval = self.points[2][0] - self.points[1][0]
             for i in range(len(self.points)):
                 self.points[i] = (self.points[i][0] + interval, self.points[i][1])
+        elif direction == 'left':
+            interval = self.points[1][0] - self.points[2][0]
+            for i in range(len(self.points)):
+                self.points[i] = (self.points[i][0] + interval, self.points[i][1])
+        elif direction == 'down':
+            interval = self.points[0][1] - self.points[1][1]
+            for i in range(len(self.points)):
+                self.points[i] = (self.points[i][0], self.points[i][1] + interval)
+        elif direction == 'up':
+            interval = self.points[1][1] - self.points[0][1]
+            for i in range(len(self.points)):
+                self.points[i] = (self.points[i][0], self.points[i][1] + interval)
 
 def main():
     
@@ -777,8 +788,15 @@ def main():
                     else:
                         if event.key == K_RIGHT:
                             player1Cursor.moveCursor('right')
-                        #combatManager = CombatManager()
-                        #gameState = 'combat'
+                        elif event.key == K_LEFT:
+                            player1Cursor.moveCursor('left')
+                        elif event.key == K_DOWN:
+                            player1Cursor.moveCursor('down')
+                        elif event.key == K_UP:
+                            player1Cursor.moveCursor('up')
+                        else:
+                            combatManager = CombatManager()
+                            gameState = 'combat'
             elif event.type == KEYUP:
                 if gameState == 'combat':
                     combatManager.keyPressed(False, event.key)
