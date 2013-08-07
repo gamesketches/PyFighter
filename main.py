@@ -762,7 +762,7 @@ def main():
     background = background.convert()
     background.fill((0, 0, 0))
 
-    #Create character select background
+    #Create character select background from characterselect.txt
     sourceFile = open('characterselect.txt')
     charSelectBackground, itsRect = load_image(sourceFile.readline()[:-1])
     charSelectBackgroundCopy = charSelectBackground.copy()
@@ -772,6 +772,11 @@ def main():
     p2Coords = convertTextToCode(sourceFile.readline())
     player1Cursor = Cursor(Rect(p1Coords[0],p1Coords[1],p1Coords[2],p1Coords[3]),boundingRect,(250,250,0))
     player2Cursor = Cursor(Rect(p2Coords[0],p1Coords[1],p1Coords[2],p1Coords[3]), boundingRect, (0,250,250))
+    i = sourceFile.readline()[:-1]
+    characters = {}
+    while i != '&':
+        characters[convertTextToCode(i[:-1])] = sourceFile.readline()[:-1]
+        i = sourceFile.readline()
 
     #Display The Background
     screen.blit(background, (0,0))
