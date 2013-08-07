@@ -720,8 +720,8 @@ class CombatManager():
             self.player2.keyPressed(down, key)
 
 class Cursor():
-    def __init__(self,theRect,interval,color):
-        self.interval = interval
+    def __init__(self,theRect,boundingRect,color):
+        self.boundingRect = boundingRect
         self.color = color
         self.points = [theRect.bottomleft, theRect.topleft, theRect.topright, theRect.bottomright]
 
@@ -731,20 +731,24 @@ class Cursor():
     def moveCursor(self, direction):
         if direction == 'RIGHT':
             interval = self.points[2][0] - self.points[1][0]
-            for i in range(len(self.points)):
-                self.points[i] = (self.points[i][0] + interval, self.points[i][1])
+            if self.points[1][0] + interval < self.boundingRect.right:                    
+                for i in range(len(self.points)):
+                    self.points[i] = (self.points[i][0] + interval, self.points[i][1])
         elif direction == 'LEFT':
             interval = self.points[1][0] - self.points[2][0]
-            for i in range(len(self.points)):
-                self.points[i] = (self.points[i][0] + interval, self.points[i][1])
+            if self.points[2][0] + interval > self.boundingRect.left:
+                for i in range(len(self.points)):
+                    self.points[i] = (self.points[i][0] + interval, self.points[i][1])
         elif direction == 'DOWN':
             interval = self.points[0][1] - self.points[1][1]
-            for i in range(len(self.points)):
-                self.points[i] = (self.points[i][0], self.points[i][1] + interval)
+            if self.points[1][1] + interval > self.boundingRect.bottom:
+                for i in range(len(self.points)):
+                    self.points[i] = (self.points[i][0], self.points[i][1] + interval)
         elif direction == 'UP':
             interval = self.points[1][1] - self.points[0][1]
-            for i in range(len(self.points)):
-                self.points[i] = (self.points[i][0], self.points[i][1] + interval)
+            if self.points[0][1] + interval < self.boundingRect.top:
+                for i in range(len(self.points)):
+                    self.points[i] = (self.points[i][0], self.points[i][1] + interval)
 
 def main():
     
@@ -759,10 +763,15 @@ def main():
     background.fill((0, 0, 0))
 
     #Create character select background
-    charSelectBackground, itsRect = load_image('character_select.jpg')
+    sourceFile = open('characterselect.txt')
+    charSelectBackground, itsRect = load_image(sourceFile.readline()[:-1])
     charSelectBackgroundCopy = charSelectBackground.copy()
-    player1Cursor = Cursor(Rect(200,100,100,150),100,(250,250,0))
-    player2Cursor = Cursor(Rect(500,100,100,150),100,(0,250,250))
+    boundingRectCoords = convertTextToCode(sourceFile.readline())
+    boundingRect = Rect(boundingRectCoords[0],boundingRectCoords[1],boundingRectCoords[2],boundingRectCoords[3])
+    p1Coords = convertTextToCode(sourceFile.readline())
+    p2Coords = convertTextToCode(sourceFile.readline())
+    player1Cursor = Cursor(Rect(p1Coords[0],p1Coords[1],p1Coords[2],p1Coords[3]),boundingRect,(250,250,0))
+    player2Cursor = Cursor(Rect(p2Coords[0],p1Coords[1],p1Coords[2],p1Coords[3]), boundingRect, (0,250,250))
 
     #Display The Background
     screen.blit(background, (0,0))
