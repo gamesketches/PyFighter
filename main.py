@@ -628,10 +628,10 @@ class Character(pygame.sprite.Sprite):
 
 class CombatManager():
     """ Class for managing collisions, inputs, gamestate, etc. """
-    def __init__(self):
-        player1InputKeys = {K_a: 'JAB', K_s:'FIERCE', K_d:'THROW', K_UP: 'UP', K_RIGHT: 'RIGHT', K_DOWN: 'DOWN', \
-                            K_LEFT: 'LEFT'}
-        player2InputKeys = {K_u: 'JAB', K_i: 'LEFT'}
+    def __init__(self, player1InputKeys, player2InputKeys):
+        #player1InputKeys = {K_a: 'JAB', K_s:'FIERCE', K_d:'THROW', K_UP: 'UP', K_RIGHT: 'RIGHT', K_DOWN: 'DOWN', \
+        #                    K_LEFT: 'LEFT'}
+        #player2InputKeys = {K_u: 'JAB', K_i: 'LEFT'}
         self.player1 = Character(300,200, player1InputKeys, True)
         self.player2 = Character (600,200, player2InputKeys, False)
         self.player1HitBox = HitBox()
@@ -729,19 +729,19 @@ class Cursor():
         pygame.draw.lines(surface,self.color,True,self.points,3)
 
     def moveCursor(self, direction):
-        if direction == 'right':
+        if direction == 'RIGHT':
             interval = self.points[2][0] - self.points[1][0]
             for i in range(len(self.points)):
                 self.points[i] = (self.points[i][0] + interval, self.points[i][1])
-        elif direction == 'left':
+        elif direction == 'LEFT':
             interval = self.points[1][0] - self.points[2][0]
             for i in range(len(self.points)):
                 self.points[i] = (self.points[i][0] + interval, self.points[i][1])
-        elif direction == 'down':
+        elif direction == 'DOWN':
             interval = self.points[0][1] - self.points[1][1]
             for i in range(len(self.points)):
                 self.points[i] = (self.points[i][0], self.points[i][1] + interval)
-        elif direction == 'up':
+        elif direction == 'UP':
             interval = self.points[1][1] - self.points[0][1]
             for i in range(len(self.points)):
                 self.points[i] = (self.points[i][0], self.points[i][1] + interval)
@@ -762,6 +762,7 @@ def main():
     charSelectBackground, itsRect = load_image('character_select.jpg')
     charSelectBackgroundCopy = charSelectBackground.copy()
     player1Cursor = Cursor(Rect(200,100,100,150),100,(250,250,0))
+    player2Cursor = Cursor(Rect(500,100,100,150),100,(0,250,250))
 
     #Display The Background
     screen.blit(background, (0,0))
@@ -772,6 +773,7 @@ def main():
     combatManager = None  
     going = True
     gameState = 'characterSelect'
+    # Being keyConfig
     font = pygame.font.Font(None, 36)
     keyConfigStrings = ["Player1 Up", "Player1 Down", "Player1 Left", "Player1 Right", "Player1 Jab", "Player1 Fierce", "Player1 Throw", \
                         "Player2 Up", "Player2 Down", "Player2 Left", "Player2 Right", "Player2 Jab", "Player2 Fierce", "Player2 Throw"]
@@ -805,6 +807,7 @@ def main():
                 break
             pygame.display.flip()
     player2Keys = tempKeyConfig
+    #End Keyconfig, start main loop
     while going:
         clock.tick(15)
         key = None
@@ -819,19 +822,13 @@ def main():
                         key = event.key
                         combatManager.keyPressed(True, event.key)
                     else:
-                        if event.key == K_RIGHT:
-                            player1Cursor.moveCursor('right')
-                        elif event.key == K_LEFT:
-                            player1Cursor.moveCursor('left')
-                        elif event.key == K_DOWN:
-                            player1Cursor.moveCursor('down')
-                        elif event.key == K_UP:
-                            player1Cursor.moveCursor('up')
-                        else:
+                        player1Cursor.moveCursor(player1Keys.get(event.key, "A"))
+                        player2Cursor.moveCursor(player2Keys.get(event.key, "A"))
+                        if event.key == K_a:
                             # Put the round start screen here
                             screen.blit(background, (0,0))
                             pygame.display.flip()
-                            combatManager = CombatManager()
+                            combatManager = CombatManager(player1Keys,player2Keys)
                             gameState = 'combat'
             elif event.type == KEYUP:
                 if gameState == 'combat':
@@ -843,6 +840,7 @@ def main():
         else:
             charSelectBackground = charSelectBackgroundCopy.copy()
             player1Cursor.applyCursor(charSelectBackground)
+            player2Cursor.applyCursor(charSelectBackground)
             screen.blit(charSelectBackground, (0,0))
         pygame.display.flip()
 
