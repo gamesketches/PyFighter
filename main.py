@@ -191,7 +191,7 @@ class Move():
 
 class Character(pygame.sprite.Sprite):
     """ Class holds all info on a Character and interprets it's actions """
-    def __init__(self, x, y, inputs, facingRight):
+    def __init__(self, x, y, inputs, facingRight, dataFile):
         pygame.sprite.Sprite.__init__(self)
         if facingRight:
             self.lifeBar = Meter((0,0,400,30),(150,150,0),(0,0,200),400,400,facingRight)
@@ -211,7 +211,7 @@ class Character(pygame.sprite.Sprite):
         self.curHurtBox = pygame.Rect(x, y, 66, 96)
         self.facingRight = facingRight
         self.inputs = inputs
-        sourceFile = open('datafile.txt')
+        sourceFile = open(dataFile)
         self.moveList= {}
         #Read all the data from the file
         while True:
@@ -628,12 +628,12 @@ class Character(pygame.sprite.Sprite):
 
 class CombatManager():
     """ Class for managing collisions, inputs, gamestate, etc. """
-    def __init__(self, player1InputKeys, player2InputKeys):
+    def __init__(self, player1InputKeys, player2InputKeys, player1CharFile,player2CharFile):
         #player1InputKeys = {K_a: 'JAB', K_s:'FIERCE', K_d:'THROW', K_UP: 'UP', K_RIGHT: 'RIGHT', K_DOWN: 'DOWN', \
         #                    K_LEFT: 'LEFT'}
         #player2InputKeys = {K_u: 'JAB', K_i: 'LEFT'}
-        self.player1 = Character(300,200, player1InputKeys, True)
-        self.player2 = Character (600,200, player2InputKeys, False)
+        self.player1 = Character(300,200, player1InputKeys, True, player1CharFile)
+        self.player2 = Character (600,200, player2InputKeys, False, player2CharFile)
         self.player1HitBox = HitBox()
         self.player2HitBox = HitBox()
         self.matchState = 'start'
@@ -842,7 +842,7 @@ def main():
                             # Put the round start screen here
                             screen.blit(background, (0,0))
                             pygame.display.flip()
-                            combatManager = CombatManager(player1Keys,player2Keys)
+                            combatManager = CombatManager(player1Keys,player2Keys, 'datafile.txt','datafile.txt')
                             gameState = 'combat'
             elif event.type == KEYUP:
                 if gameState == 'combat':
