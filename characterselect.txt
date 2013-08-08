@@ -4,4 +4,6 @@ character_select.jpg
 300,100,100,150
 200,100,100,150
 datafile.txt
+300,100,100,150
+ken.txt
 &

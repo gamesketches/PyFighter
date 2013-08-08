@@ -1,3 +1,4 @@
+RyuSFA3.png
 walkingForward
 63, 237, 71, 94
 144, 237, 71, 94
@@ -85,7 +86,7 @@ block
 &
 normalMove
 JAB
-A
+melee
 10,10,5,0
 mid
 433, 699, 78, 94

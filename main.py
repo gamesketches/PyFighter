@@ -212,6 +212,7 @@ class Character(pygame.sprite.Sprite):
         self.facingRight = facingRight
         self.inputs = inputs
         sourceFile = open(dataFile)
+        sourceImage = sourceFile.readline()[:-1]
         self.moveList= {}
         #Read all the data from the file
         while True:
@@ -224,15 +225,15 @@ class Character(pygame.sprite.Sprite):
                 while i != '&\n':
                     tempAnimation.append(convertTextToCode(i))
                     i = sourceFile.readline()
-                self.neutralAnimations['standing'] = load_animation('RyuSFA3.png', tempAnimation)
+                self.neutralAnimations['standing'] = load_animation(sourceImage, tempAnimation)
                 i = sourceFile.readline()
                 tempAnimation = []
                 tempMoveList = {}
                 while i != '@\n':
                     if i == 'normalMove\n':
-                        self.loadNormalMove(sourceFile,tempMoveList,'standing')
+                        self.loadNormalMove(sourceFile,sourceImage,tempMoveList,'standing')
                     if i == 'block\n':
-                        self.blockAnimations['standing'] = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
+                        self.blockAnimations['standing'] = load_animation(sourceImage, [convertTextToCode(sourceFile.readline())])
                     i = sourceFile.readline()
                 self.moveList['standing'] = tempMoveList
             if i == 'walkingForward\n':
@@ -240,23 +241,23 @@ class Character(pygame.sprite.Sprite):
                 while i != '&\n':
                     tempAnimation.append(convertTextToCode(i))
                     i = sourceFile.readline()
-                self.walkforwardAnimation = load_animation('RyuSFA3.png', tempAnimation)
+                self.walkforwardAnimation = load_animation(sourceImage, tempAnimation)
             if i == 'knockDown\n':
                 i = sourceFile.readline()
                 while i != '&\n':
                     tempAnimation.append(convertTextToCode(i))
                     i = sourceFile.readline()
-                self.knockDownAnimation = load_animation('RyuSFA3.png', tempAnimation)
+                self.knockDownAnimation = load_animation(sourceImage, tempAnimation)
             if i == 'crouch\n':
-                self.neutralAnimations['crouching'] = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
+                self.neutralAnimations['crouching'] = load_animation(sourceImage, [convertTextToCode(sourceFile.readline())])
                 i = sourceFile.readline()
                 tempAnimation = []
                 tempMoveList = {}
                 while i != '@\n':
                     if i == 'normalMove\n':
-                        self.loadNormalMove(sourceFile,tempMoveList,'crouching')
+                        self.loadNormalMove(sourceFile,sourceImage,tempMoveList,'crouching')
                     if i == 'block\n':
-                        self.blockAnimations['crouching'] = load_animation('RyuSFA3.png', [convertTextToCode(sourceFile.readline())])
+                        self.blockAnimations['crouching'] = load_animation(sourceImage, [convertTextToCode(sourceFile.readline())])
                     #for i in self.crouchingMoveList.items():
                     #    self.crouchingMoveList[i].state = 'crouching'
                     i = sourceFile.readline()
@@ -266,19 +267,19 @@ class Character(pygame.sprite.Sprite):
                 while i != '&\n':
                     tempAnimation.append(convertTextToCode(i))
                     i = sourceFile.readline()
-                self.hitAnimation = load_animation('RyuSFA3.png', tempAnimation)
+                self.hitAnimation = load_animation(sourceImage, tempAnimation)
             if i == 'jumping\n':
                 i = sourceFile.readline()
                 while i != '&\n':
                     tempAnimation.append(convertTextToCode(i))
                     i = sourceFile.readline()
-                self.neutralAnimations['jumping'] = load_animation('RyuSFA3.png', tempAnimation)
+                self.neutralAnimations['jumping'] = load_animation(sourceImage, tempAnimation)
                 i = sourceFile.readline()
                 tempAnimation = []
                 tempMoveList = {}
                 while i != '@\n':
                     if i == 'normalMove\n':
-                        self.loadNormalMove(sourceFile,tempMoveList,'jumping')
+                        self.loadNormalMove(sourceFile,sourceImage,tempMoveList,'jumping')
                     i = sourceFile.readline()
                 self.moveList['jumping'] = tempMoveList
             if i == 'thrown\n':
@@ -286,12 +287,12 @@ class Character(pygame.sprite.Sprite):
                 while i != '&\n':
                     tempAnimation.append(convertTextToCode(i))
                     i = sourceFile.readline()
-                self.getThrown = Move("getThrown", "getThrown", load_animation('RyuSFA3.png', tempAnimation), [(0,0,0,0)],{'damage':0,'hitstun':0,'knockback':0, 'knockdown':False,'blocktype':'mid'}, [(-10,-10)], 'knockedDown')
+                self.getThrown = Move("getThrown", "getThrown", load_animation(sourceImage, tempAnimation), [(0,0,0,0)],{'damage':0,'hitstun':0,'knockback':0, 'knockdown':False,'blocktype':'mid'}, [(-10,-10)], 'knockedDown')
         self.curAnimation = self.neutralAnimations['standing']
         self.inputChain = [] # Keeps track of inputs for interpretting
         self.blockImage = None
 
-    def loadNormalMove(self,sourceFile,moveList, state):
+    def loadNormalMove(self,sourceFile,sourceImage,moveList, state):
         tempAnimation = []
         moveName = sourceFile.readline()
         moveName = moveName[:-1]
@@ -316,7 +317,7 @@ class Character(pygame.sprite.Sprite):
         while i != '&\n':
             velocityCoords.append(convertTextToCode(i))
             i = sourceFile.readline()
-        moveList[moveName] = Move(moveName, moveType, load_animation('RyuSFA3.png', tempAnimation), hitBoxCoords, properties, velocityCoords, state)
+        moveList[moveName] = Move(moveName, moveType, load_animation(sourceImage, tempAnimation), hitBoxCoords, properties, velocityCoords, state)
         
 
     def update(self, gameState):
@@ -728,6 +729,9 @@ class Cursor():
     def applyCursor(self, surface):
         pygame.draw.lines(surface,self.color,True,self.points,3)
 
+    def returnLocation(self):
+        return (self.points[1][0],self.points[1][1],self.points[2][0] - self.points[1][0], self.points[0][1] - self.points[1][1])
+
     def moveCursor(self, direction):
         if direction == 'RIGHT':
             interval = self.points[2][0] - self.points[1][0]
@@ -772,10 +776,10 @@ def main():
     p2Coords = convertTextToCode(sourceFile.readline())
     player1Cursor = Cursor(Rect(p1Coords[0],p1Coords[1],p1Coords[2],p1Coords[3]),boundingRect,(250,250,0))
     player2Cursor = Cursor(Rect(p2Coords[0],p1Coords[1],p1Coords[2],p1Coords[3]), boundingRect, (0,250,250))
-    i = sourceFile.readline()[:-1]
+    i = sourceFile.readline()
     characters = {}
     while i != '&':
-        characters[convertTextToCode(i[:-1])] = sourceFile.readline()[:-1]
+        characters[convertTextToCode(i)] = sourceFile.readline()[:-1]
         i = sourceFile.readline()
 
     #Display The Background
@@ -842,7 +846,9 @@ def main():
                             # Put the round start screen here
                             screen.blit(background, (0,0))
                             pygame.display.flip()
-                            combatManager = CombatManager(player1Keys,player2Keys, 'datafile.txt','datafile.txt')
+                            print characters
+                            #combatManager = CombatManager(player1Keys,player2Keys, 'datafile.txt','datafile.txt')
+                            combatManager = CombatManager(player1Keys,player2Keys, characters[player1Cursor.returnLocation()],characters[player2Cursor.returnLocation()])
                             gameState = 'combat'
             elif event.type == KEYUP:
                 if gameState == 'combat':
