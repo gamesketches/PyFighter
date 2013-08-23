@@ -9,12 +9,6 @@ data_dir = os.path.join(main_dir, 'data')
 
 projectiles = []
 
-#def enum(*sequential, **named):
-#    enums = dict(zip(sequential, range(len(sequential))), **named)
-#    return type('Enum', (), enums)
-
-#Inputs = enum('DOWN','DOWNRIGHT','RIGHT','UPRIGHT','UP','UPLEFT','LEFT','DOWNLEFT', 'TERMINAL')
-
 def load_image(name, colorkey=None):
     fullname = os.path.join(data_dir, name)
     try:
